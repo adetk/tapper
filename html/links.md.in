@@ -1,0 +1,80 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+
+    File: html/links.md.in
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Copying and distribution of this file, with or without modification, are permitted in any
+    medium without royalty provided the copyright notice and this notice are preserved. This file
+    is offered as-is, without any warranty.
+
+    SPDX-License-Identifier: FSFAP
+
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+---
+title:    "@PACKAGE_NAME@"
+subtitle: "@PACKAGE_SUMMARY@"
+lang:     en
+...
+
+[AUTHORS.md]:                           authors.html
+[BUGS.md]:                              bugs.html
+[FSFAP.md]:                             fsfap.html   "FSF All Permissive License"
+[GPLv3.md]:                             gpl-3.0.html "GNU General Public License v3"
+[INSTALL.md]:                           install.html
+[LICENSE.md]:                           license.html
+[MANIFEST.md]:                          manifest.html
+[NEWS.md]:                              news.html
+[tapper(1)]:                            tapper.en.html
+[man.en]:                               tapper.en.html
+[man.ru]:                               tapper.ru.html
+[English]:                              en.html
+[Русский]:                              ru.html
+
+[Description/Actions]:                  tapper.en.html#actions
+[Description/Assignments]:              tapper.en.html#assignments
+[Description/Security note]:            tapper.en.html#security-note
+[Caveats/GNOME layouter does not work]: tapper.en.html#gnome-layouter-does-not-work
+[Examples/Advanced usage]:              tapper.en.html#advanced-usage
+[Xkb layouter does not work in GNOME]:  tapper.en.html#xkb-layouter-does-not-work-in-gnome
+[Раскладчик «Xkb» не работает в Гноме]: tapper.ru.html#раскладчик-xkb-не-работает-в-гноме
+
+[agism]:                                https://agism.sourceforge.io/
+[enable agism]:                         https://agism.sourceforge.io/en.html#enabling
+
+[GNU General Public License]:           gpl-3.0.html "GNU General Public License v3"
+[FSF All Permissive License]:           fsfap.html "FSF All Permissive License"
+[GPLv3]:                                gpl-3.0.html "GNU General Public License v3"
+[GPLv3+ logo]:                          gplv3-or-later.svg {.gpl}
+
+[Desktop Application Autostart]:               https://specifications.freedesktop.org/autostart-spec/autostart-spec-0.5.html
+[Desktop Application Autostart Specification]: https://specifications.freedesktop.org/autostart-spec/autostart-spec-0.5.html
+
+[GNOME]:        https://www.gnome.org/                  "GNOME desktop"
+[KDE]:          https://kde.org/                        "KDE desktop"
+[LXDE]:         https://www.lxde.org/                   "LXDE desktop"
+[LXQt]:         https://lxqt-project.org/               "LXQt desktop"
+[Mate]:         https://mate-desktop.org/               "Mate desktop"
+[Xfce]:         https://xfce.org/                       "Xfce desktop"
+[Cinnamon]:     https://cinnamon-spices.linuxmint.com/  "Cinnamon desktop"
+[i3]:           https://i3wm.org/                       "i3 window manager"
+
+[SourceForge]:  https://sourceforge.net/
+[sf/summary]:   @PACKAGE_SF_SUMMARY@
+[tarball]:      @PACKAGE_SF_FILES@@name@-@ver@-@rel@.tar.gz
+[srpm]:         @PACKAGE_SF_FILES@@name@-@ver@-@rel@.src.rpm
+[rpms]:         @PACKAGE_COPR_REPO@package/@name@
+[copr]:         https://copr.fedorainfracloud.org/
+[copr/project]: @PACKAGE_COPR_REPO@
+
+[sirocco]:              https://aur.archlinux.org/account/sirocco
+[AUR]:                  https://aur.archlinux.org/
+[Arch User Repository]: https://wiki.archlinux.org/title/Arch_User_Repository
+[aur-kbd-tapper]:       https://aur.archlinux.org/packages/kbd-tapper/
+
+<!-- end of file -->

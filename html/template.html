@@ -1,0 +1,108 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+
+    File: html/template.html
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Tapper is free software: you can redistribute it and/or modify it under the terms of the GNU
+    General Public License as published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    Tapper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+    even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along with Tapper.  If not,
+    see <https://www.gnu.org/licenses/>.
+
+    This file is based on:
+
+        File: data/templates/default.html5 from Pandoc.
+
+        Copyright © 2014—2018, John MacFarlane.
+
+        Pandoc's templates (in `data/templates`) are dual-licensed as either GPL (v2 or higher,
+        same as pandoc) or (at your option) the BSD 3-clause license.
+
+    SPDX-License-Identifier: GPL-3.0-or-later
+
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+<!DOCTYPE html>
+<html$if(lang)$ lang="$lang$"$endif$$if(vocab)$ vocab="$vocab$"$endif$$if(resource)$ resource="$resource$"$endif$$if(typeof)$ typeof="$typeof$"$endif$>
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Content-Style-Type" content="text/css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="pandoc"/>
+$for(author)$
+<meta name="author" content="$author$"/>
+$endfor$
+$if(date)$
+<meta name="date" content="$date$"/>
+$endif$
+<title>$title$$if(subtitle)$: $subtitle$$endif$</title>
+$if(description)$
+<meta name="description" content="$description$"/>
+$endif$
+$if(keywords)$
+<meta name="keywords" content="$for(keywords)$$keywords$, $endfor$"/>
+$endif$
+<style>code{white-space: pre;}</style>
+$if(quotes)$
+<style>q { quotes: "“" "”" "‘" "’"; }</style>
+$endif$
+$if(highlighting-css)$
+<style>
+$highlighting-css$
+</style>
+$endif$
+$for(css)$
+<link rel="stylesheet" href="$css$"$if(html5)$$else$ type="text/css"$endif$/>
+$endfor$
+$if(math)$
+$math$
+$endif$
+$for(header-includes)$
+$header-includes$
+$endfor$
+$if(properties.applicationCategory)$
+<meta property="applicationCategory" content="$properties.applicationCategory$"/>
+$endif$
+$if(properties.applicationSubCategory)$
+<meta property="applicationSubCategory" content="$properties.applicationSubCategory$"/>
+$endif$
+$if(properties.softwareVersion)$
+<meta property="softwareVersion" content="$properties.softwareVersion$"/>
+$endif$
+$if(properties.url)$
+<meta property="url" content="$properties.url$"/>
+$endif$
+$if(properties.downloadUrl)$
+<meta property="downloadUrl" content="$properties.downloadUrl$"/>
+$endif$
+$if(properties.fileFormat)$
+<meta property="fileFormat" content="$properties.fileFormat$"/>
+$endif$
+$if(properties.license)$
+<meta property="license" content="$properties.license$"/>
+$endif$
+</head>
+<body>
+$for(include-before)$
+$include-before$
+$endfor$
+$if(toc)$
+<div id="$idprefix$TOC">
+$toc$
+</div>
+$endif$
+$body$
+$for(include-after)$
+$include-after$
+$endfor$
+</body>
+</html>

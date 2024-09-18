@@ -1,0 +1,902 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+
+    File: man/tapper.en.md.in
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Tapper is free software: you can redistribute it and/or modify it under the terms of the GNU
+    General Public License as published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    Tapper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+    even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along with Tapper.  If not,
+    see <https://www.gnu.org/licenses/>.
+
+    SPDX-License-Identifier: GPL-3.0-or-later
+
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+NAME
+====
+
+**`tapper`** — @PACKAGE_SUMMARY@.
+
+<!-- By convention, program name and subject must be separated with dash, otherwise some programs
+(e. g. `apropos`) can't parse it. I do use em-dash here, because it is better for HTML version, but
+I will replace it with dash at building the man version. -->
+
+SYNOPSIS
+========
+
+|   **`tapper`** [*option*]… [*assignment*]…
+
+where *assignment* is (in EBNF notation):
+
+|   *assignment* = *key*, "**`=`**", [ *actions* ];
+|   *actions*    = *action*, { "**`,`**", *action* };
+|   *action*     = *key* | ( "**`@`**", *layout* );
+|   *key*        = *key code* | *key name*;
+|   *layout*     = *layout index* | *layout name*;
+
+DESCRIPTION
+===========
+
+Tapper runs in the background, when you tap an assigned *key*, Tapper activates the corresponding
+keyboard *layout*. The assigned key always activates the same layout: Tapper never toggles layouts,
+each layout must have its own dedicated key. Tapper key feature is using modifier keys
+(e. g.‍ `Shift`{.k}s, `Ctrl`{.k}s or `Alt`{.k}s) to switch keyboard layouts without losing
+functionality of the modifier keys.
+
+In addition to switching keyboard layouts, Tapper can emulate keystrokes. It allows some useful
+tricks.
+
+Typically, Tapper is configured by using the **`--dconf-editor`** option, and set up to start
+automatically with the **`--autostart`** option. Alternatively, Tapper can be configured through
+the command line with the **`--save-settings`** options, and set up for autostart using the
+desktop-specific apps, like GNOME “Tweaks” or KDE “System Settings”.
+
+Listeners
+---------
+
+In order to detect taps, Tapper listens user input events (key press, key release, etc). The Tapper
+component that listens input events is called “listener”. Tapper has several listeners:
+
+libinput
+
+:   libinput is a low-level library to handle input devices. The libinput listener uses this
+    library and works for both X Window System and Wayland, but requires extra permissions: the
+    Tapper process must have the `input` group identity. (It could be achieved if `tapper`
+    executable file is owned by the `input` group and has the `set-group-id` bit set. This is the
+    reason why Tapper should be properly installed.)
+
+    See also “[Security]” below.
+
+XRecord
+
+:   XRecord is an X Window System extension. The XRecord listener uses the extension and obviously
+    requires X Window System and does not work in Wayland, but does not require extra permissions.
+
+Auto
+
+:   This is not a real listener but instruction for Tapper to select a suitable listener
+    automatically. Tapper examines the `XDG_SESSION_TYPE` environment variable: if the value is
+    `x11`, Tapper selects the XRecord listener, otherwise the libinput listener is selected.
+
+Tapper has several listeners listed above, but only one selected listener is used in run time. A
+listener to use is specified by the **`listener`** key in settings and/or by the **`--listener`**
+command line option.
+
+Layouters
+---------
+
+The Tapper component that manages (reports all available layouts, activates layouts, etc) keyboard
+layouts is called “layouter”. Tapper has several layouters:
+
+GNOME
+
+:   This layouter requests Agism GNOME Shell extension to activate the layout, Agism calls
+    appropriate GNOME Shell methods to do the work. Practically it means that the GNOME layouter
+    works nicely in the GNOME desktop: it updates keyboard indicator and manages as many keyboard
+    layouts as configured in the GNOME Shell.
+
+    Also, the GNOME layouter monitors the GNOME session. If the session becomes not active (e. g.
+    when the user locks the current session and switches to the GNOME Display Manager screen or to
+    another session), the GNOME layouter switches Tapper to passive mode: it continues to listen
+    user input events, but does not execute any actions (does not activate layouts and does not
+    simulate keystrokes). If the session becomes active, the GNOME layouter switches Tapper back to
+    normal mode. Such behavior prevents one session from undesirably affecting another (this is
+    possible in case of using the libinput listener and/or the libevdev enitter).
+
+    **Important note:** The GNOME layouter requires Agism GNOME Shell extension is installed and
+    enabled.
+
+KDE
+
+:   This layouter calls KDE via D-Bus, KDE does the work.
+
+    **Note:** The KDE layouter cannot ring the bell, so the **`--bell`** option does not have
+    effect if the KDE layouter is selected.
+
+Xkb
+
+:   Xkb is an X Window System extension. Note the Xkb limitation: Xkb allows you to load up to 4
+    keyboard layouts (they are called “groups” in the technical documentation) and then activate
+    one of these preloaded layouts (they call it “to lock a group”).
+
+    The Xkb layouter uses Xkb to activate the layout. Obviously this layouter depends on X Window
+    System and does not work in Wayland, but it works for non-GNOME desktops running on top of the
+    X Window System session (Cinnamon, i3, KDE, LXDE, LXQt, Mate, Xfce to name a few).
+
+Dummy
+
+:   This is a stub, dumb layouter, which does nothing. It reports no layouts and does not activate
+    layouts. It does not ring the bell, too. It is used when no layout management is required.
+
+Auto
+
+:   This is not a real layouter but an instruction for Tapper to select a suitable layouter
+    automatically. If no layout switching is required Tapper selects the dummy layouter; if layout
+    switching is required Tapper checks the `XDG_SESSION_DESKTOP` environment variable: if the
+    value is `gnome`, `gnome-classic`, `gnome-xorg`, `ubuntu`, or `ubuntu-wayland`, Tapper selects
+    the GNOME layouter, if the value is `KDE`, Tapper selects the KDE layouter, otherwise the Xkb
+    layouter is selected.
+
+**Note:** In the Ubuntu “native desktop” the environment variable `XDG_SESSION_DESKTOP` has value
+`ubuntu`, i. e. the Ubuntu distro pretends to runs the Ubuntu desktop. However, the Ubuntu desktop
+is actually the GNOME Shell with few Ubuntu-specific extensions, so the GNOME layouter works for
+Ubuntu desktop.
+
+Tapper has several layouters listed above, but only one selected layouter is used in run time. A
+layouter to use is specified by **`layouter`** key in settings and/or by **`--layouter`** command
+line option.
+
+Emitters
+--------
+
+The Tapper component that emulates keystrokes (emits input events) is called “emitter”. Tapper has
+several emitters:
+
+libevdev
+
+:   libevdev is a low-level library that manages kernel input devices. The libevdev emitter uses
+    this library to create a virtual keyboard, and later emulates keystrokes on that keyboard. It
+    works for both X Window System and Wayland, but requires extra permissions: the Tapper process
+    must have the `root` user identity. (It could be achieved if `tapper` executable file is owned
+    by the `root` user and has the `set-user-id` bit set. This is the reason why Tapper should be
+    properly installed.)
+
+    See also “[Security]” below.
+
+XTest
+
+:   XTest is an X Window System extension. The XTest emitter uses the extension and obviously
+    requires X Window System and does not work in Wayland, but does not require extra permissions.
+
+Dummy
+
+:   This is a stub, dumb emitter, which does nothing. It is used when keystroke emulation is not
+    required.
+
+Auto
+
+:   This is not a real emitter but an instruction for Tapper to select a suitable emitter
+    automatically. If no keystroke emulation is required Tapper selects the dummy emitter; if
+    keystroke emulation is required Tapper checks the `XDG_SESSION_TYPE` environment variable: if
+    the value is `x11`, Tapper selects the XTest emitter, otherwise the libevdev emitter is
+    selected.
+
+Tapper has several emitters listed above, but only one selected emitter is used in run time. An
+emitter to use is specified by **`emitter`** key in settings and/or by **`--emitter`** command line
+option.
+
+Keys
+----
+
+Key can be specified by a key code (an unsigned integer number, e. g. `29`) or a symbolic key
+name (e. g. `LCTL` or `KEY_LEFTCTRL`).
+
+Tapper uses the Linux kernel input event codes regardless of the selected listener and emitter.
+
+<!-- (See `/usr/include/linux/input-event-codes.h` for Linux input event codes). Considering that
+X Window System key code is Linux input event code + `8`, recalculating key codes from one coding
+system to another seems to be trivial. There is a complication, though: Linux use large (32 bit)
+code space for keys (and actually uses only small part of the space: all Linux key codes fall to
+range `[1…767]`), while X Window System uses much smaller code space (8 bit; and actually uses
+almost all the space: X Window System key codes are from range `[9…255]`), so not all Linux kernel
+key codes can be converted to X Window System key codes. Fortunately, X Window System range of key
+codes is enough to represent all the keys from ordinary 105-key keyboard.) -->
+
+Tapper converts key names to the corresponding key codes using the selected listener, and then
+operates only with key codes. If the specified symbolic key name is not known to the selected
+listener, it causes error.
+
+Run Tapper with **`--list-keys`** option to see the list of keys known to the selected listener.
+Use **`--list-keys`** in combination with **`--listener`** to see the list of keys for the specific
+listener. Alternatively, run Tapper with **`--show-taps`**, then tap desired keys to discover their
+codes.
+
+Taps
+----
+
+A “tap” means that a single key is pressed and quickly released, so:
+
+*   no other keys are pressed or released at this time, and
+*   period between pressing and releasing is shorter than keyboard repeat delay (usually it is
+    0.5 second, but it depend on your desktop settings).
+
+**Note:** Both conditions must be met. If a key is pressed in a chord with other key(s), this is
+not a tap. If the key is released slowly (so that it was pressed for 0.5 seconds or more), this is
+not a tap.
+
+Tapper relies on the selected layouter to get keyboard repeat delay value. GNOME layouter reads
+keyboard repeat delay from the GNOME settings in GSettings database; KDE layouter parses the KDE
+configuration files; Xkb layouter gets it from X Window System. Tapper reads keyboard repeat delay
+only once; if you change keyboard repeat delay after Tapper has started, Tapper will not use the
+new value until restarted.
+
+Buttons
+-------
+
+A button is a key located on an input device other than keyboard, e. g. mouse, joystick, touchpad,
+etc.
+
+Tapper listens for button press and button release events in order to detect taps correctly. For
+example, let us consider `Ctrl`{.k}+the left button click. Technically, it consists of 4 input
+events: (1) `Ctrl`{.k} key press, (2) the left button press, (3) the left button release, (4)
+`Ctrl`{.k} key release. If mouse button events are not listened, Tapper would only see `Ctrl`{.k}
+key press event followed by `Ctrl`{.k} key release event and wrongly interpret them as a tap on
+`Ctrl`{.k} key.
+
+<!-- (Technically, in Linux key codes and button codes are not separated, they share the same code
+space, so a mouse button is just a key with different key code. However, things a bit more
+complicated in X Window System, since mouse buttons use dedicated code space there: a key and a
+button are distinct even if they have the same code. It makes recalculating from one coding system
+to another not trivial, but you should not worry about it if your mouse has less than 16 buttons.)
+-->
+
+Tapper treats buttons just like keys (for example, you can change keyboard layouts by mouse
+clicks). The **`--list-keys`** option shows button names as well as key names. In case of libinput
+listener key names start with `KEY_` prefix, button names start with `BTN_`. In case of XRecord
+listener button names start with `BTN`.
+
+Layouts
+-------
+
+Keyboard layout can be specified by a layout index (an unsigned integer number, e. g. `1`, `2`,
+`3`, etc) or name (e. g. `English (US)` or `Russian (typewriter)`).
+
+Layouts are layouter-dependent. In case of GNOME layouter they are GNOME “input sources”, in case
+of Xkb layouter they are Xkb “groups”. Tapper enumerates layouts starting from the number 1.
+
+Tapper converts layout names to corresponding layout indexes using the selected layouter and then
+operates only with layout indexes. If the specified layout name is not known to the selected
+layouter, it causes error.
+
+Run Tapper with **`--list-layouts`** option to see the list of currently configured layouts for the
+current layouter. Use **`--list-layouts`** in combination with **`--layouter`** to see the list of
+layouts known to the specific layouter.
+
+Actions
+-------
+
+An *action* is an elementary command that Tapper can execute. There are 2 types of actions:
+
+**`@`***layout*
+
+:   Activate the specified layout. Tapper does not load any keyboard layouts to GNOME, KDE or
+    X Window System, Tapper just makes one of currently loaded layouts active. Technically
+    speaking, the GNOME layouter invokes an Agism method via D-Bus, the KDE layouter invokes an KDE
+    method via D-Bus, the Xkb layouter calls `XkbLockGroup` function. (In turn, GNOME Shell working
+    on top of X Window System session may (re)load keyboard layout(s) to lift the X Window System
+    limit of 4 layouts).
+
+*key*
+
+:   Emulate the stroke on the specified key by emitting two input events: key press and key
+    release.
+
+Note that a layout used as an *action* must be prefixed with `@` character to distinguish between
+layouts and keys: `1` is the command to emulate `Esc`{.k} keystroke, while `@1` is the command to
+activate the first layout. Layout names must be prefixed, too: `@English (US)`.
+
+Assignments
+-----------
+
+An *assignment* dedicates the key for the series of *action*s.
+
+Assignments are specified by **`assignments`** key in the settings and/or by *assignment* arguments
+on the command line. Note the difference, though: in the settings, symbolic key names and layout
+names are not allowed, only key codes and layout indexes should be used. The command line is a
+little more flexible: it allows both codes and names.
+
+Basic assignments
+
+:   The list of actions consists of a single keyboard layout activation command (e. g. `LCTL=@1`).
+    In such a case, assignment dedicates the key for the keyboard layout. When Tapper detects a tap
+    on the assigned key, it activates the layout.
+
+    A key can be assigned only once, using the key for the second time (e. g. `LCTL=@1 LCTL=@2`)
+    causes an error. In constrast, the same layout may be assigned to multiple different keys
+    (e. g. `LCTL=@1 LFSH=@1`), in such a case the layout (the first layout in the example) is
+    activated by tap on any of the keys assigned to the layout (either the left `Ctrl`{.k} or the
+    left `Shift`{.k}).
+
+    Empty list of actions (e. g. `LCTL=`) is allowed, too. Such assignment unassigns the key. It is
+    useful to cancel key assignments made in settings.
+
+Advanced assignments
+
+:   The list of actions can be an arbitrary sequence of comma-separated actions
+    (e. g. `LCTL=@1,BTN1,BTN1,@2`). When Tapper detects a tap on the assigned key, it executes the
+    associated actions sequentially.
+
+    List of actions can be an arbitrary mix of layout activation and keystroke emulation commands,
+    but there are some limitations:
+
+    *   Tapper can not hide input events from other programs. For example, let us consider
+        `LCTL=BTN1`: when Tapper detects the left `Ctrl`{.k} tap, it emulates `Left button`{.b}
+        click. But other programs will see the left `Ctrl`{.k} press and release anyway.
+
+    *   The input events generated by Tapper are visible for all the programs, including Tapper
+        itself. So assignments like `LCTL=LCTL` or `LCTL=RCTL RCTL=LCTL` will cause infinite loop
+        as soon as the first tap on an assigned key is detected.
+
+    *   Tapper initiates keyboard layout change, but actual layout activation is done
+        asynchronously by the GNOME Shell, KDE, or the X Window System. Similarly, Tapper emits
+        input events, but they are routed asynchronously through the Linux kernel and/or the X
+        Windows System. Because of this, result of commands of different type can be delivered out
+        of order. For example, the result of `@1,30,@2,31` may be the same as the result of
+        `@1,@2,30,31` or `@1,30,31,@2` or `30,31,@1,@2`. However, result of commands of the same
+        type should be delivered in order: in the previous example, programs will always see `30`
+        keystroke followed by `31` keystroke.
+
+    Despite these limitations, keystroke emulation allows some useful tricks, see “[Advanced
+    usage]” in “[EXAMPLES]”.
+
+Bells
+-----
+
+Tapper can ring the bell when it activates a layout. Actual bell sound depends on system
+configuration, bell may have no sound at all or have visual effect.
+
+Bell mode is specified by **`bell`** key in settings and/or by **`--bell`** and **`--no-bell`**
+command line options.
+
+**Note:** The KDE layouter cannot ring the bell, so the **`--bell`** option will not have effect if
+the KDE layouter is selected.
+
+Settings
+--------
+
+Tapper configuration includes:
+
+*   listener selection,
+*   layouter selection,
+*   emitter selection,
+*   bell mode, and
+*   key assignments.
+
+Tapper can load configuration from the GSettings database and save it back.
+
+By default, Tapper loads the settings; use **`--no-load-settings`** option to avoid loading. Tapper
+merges the loaded settings and the configuration specified by the command line to get the effective
+configuration. In case of conflicts, command line options and assignments override the loaded
+settings. If **`--save-settings`** option is specified, Tapper saves the effective configuration to
+the GSettings database and exits.
+
+Thus, you can edit Tapper settings using the **`--save-settings`** option. If you prefer a
+graphical interface, use the **`--dconf-editor`** option — Tapper will open its settings in “dconf
+Editor” application. Alternatively, Tapper settings can be viewed or edited with command-line
+tools `gsettings` and `dconf`. Tapper’s settings schema is `@PACKAGE_GSCHEMA_ID@`, path is
+`@PACKAGE_GSCHEMA_PATH@`.
+
+OPTIONS
+=======
+
+Long option names can be abbreviated until they remain unique. For example, **`--save-options`**
+can be types as just **`--save`** or even **`--sa`** (but **`--s`** will be rejected because it is
+ambiguous: it could be either **`--save-settings`**, **`--syslog`** or **`--show-taps`**).
+
+Order of options does not matter. Even if you type **`--save-settings`** **`--load-settings`**
+**`--bell`**, Tapper will load settings first, then enable bell, and then save settings.
+
+Listener selection
+------------------
+
+**`--listener=`***listener*
+
+:   Listener to use, one of: **`libinput`**, **`xrecord`**, **`auto`** (default).
+
+**`--libinput`**
+
+:   Same as **`--listener=libinput`**.
+
+**`--xrecord`**
+
+:   Same as **`--listener=xrecord`**.
+
+Layouter selection
+------------------
+
+**`--layouter=`***layouter*
+
+:   Layouter to use, one of: **`gnome`**, **`kde`**, **`xkb`**, **`dummy`**, or **`auto`**
+    (default).
+
+**`--gnome`**
+
+:   Same as **`--layouter=gnome`**.
+
+**`--kde`**
+
+:   Same as **`--layouter=kde`**.
+
+**`--xkb`**
+
+:   Same as **`--layouter=xkb`**.
+
+Emitter selection
+-----------------
+
+**`--emitter=`***emitter*
+
+:   Layouter to use, one of: **`libevdev`**, **`xtest`**, **`dummy`**, or **`auto`** (default).
+
+**`--libevdev`**
+
+:   Same as **`--emitter=libevdev`**.
+
+**`--xtest`**
+
+:   Same as **`--emitter=xtest`**.
+
+Bell mode
+---------
+
+**`--bell`**
+
+:   Ring the bell when Tapper activates a layout.
+
+**`--no-bell`**
+
+:   Do not ring the bell when Tapper activates a layout (default).
+
+Settings management
+-------------------
+
+**`--dconf-editor`**
+
+:   Launch “dconf Editor” tool to edit Tapper settings and exit.
+
+**`--load-settings`**
+
+:   Load settings from GSettings database (default).
+
+**`--no-load-settings`**
+
+:   Do not load settings from GSettings database.
+
+**`--reset-settings`**
+
+:   Reset setting to default and exit.
+
+**`--save-settings`**
+
+:   Save effective configuration to GSettings database and exit.
+
+Other options
+-------------
+
+**`--autostart`**
+
+:   Set up Tapper to start automatically when you log in and exit. The option works for desktops,
+    respecting the [Desktop Application Autostart Specification][].
+
+**`--no-autostart`**
+
+:   Disable Tapper autostart (by removing the link to the Tapper desktop file from your
+    `~/.config/autostart/` directory) and exit.
+
+**`--lay-off`**
+
+:   Parse command line options and arguments, load settings (if not prohibited), print effective
+    configuration and exit. The option exists for testing purposes.
+
+**`--no-default-assignments`**
+
+:   Do not use default assignments. Tapper uses default assignments if no assignments are made in
+    settings (if settings loading is enabled) and command line. The option exists for testing
+    purposes primarily.
+
+**`--quiet`**
+
+:   Do not print introductory messages (copyright and effective configuration).
+
+**`--syslog`**
+
+:   Copy run time errors and warnings to system log. (Command line errors are not copied to system
+    log.)
+
+**`--x`**
+
+:   Same as **`--xrecord --xkb --xtest`**.
+
+Help options
+------------
+
+**`--help`**
+
+:   Print help message and exit.
+
+**`--list-keys`**
+
+:   List keys and exit. Key names are listener-dependent.
+
+**`--list-layouts`**
+
+:   List keyboard layouts and exit. Layouts are layouter-dependent.
+
+**`--show-taps`**
+
+:   Run Tapper in "show taps" mode: whenever a tap is detected, Tapper prints the code and name of
+    the tapped key. The mode implies the **`--emitter=dummy`** option and does not allow
+    assignments in the command line; emitter selection and assignmnets in settings are ignored.
+
+**`--usage`**
+
+:   Print very short usage message and exit.
+
+**`--version`**
+
+:   Print short message containing version, copyright, license and exit.
+
+EXIT STATUS
+===========
+
+*   `0` if everything is ok,
+*   `2` if usage (command-line) error detected,
+*   `3` if run time error occurred.
+
+EXAMPLES
+========
+
+Getting info
+------------
+
+List keys known to the selected listener:
+
+    $ tapper --list-keys
+
+List keys known to the libinput listener:
+
+    $ tapper --libinput --list-keys
+
+Discover key codes (tap desired keys then press `Ctrl`{.k}+`C`{.k} to stop Tapper):
+
+    $ tapper --show-taps
+
+List layouts known to the selected layouter:
+
+    $ tapper --list-layouts
+
+List layouts known to the GNOME layouter:
+
+    $ tapper --gnome --list-layouts
+
+List layouts known to the KDE layouter:
+
+    $ tapper --kde --list-layouts
+
+Basic usage
+-----------
+
+By default, if tapper settings are not yet modified, the left `Ctrl`{.k} tap activates the first
+keyboard layout and the right `Ctrl`{.k} tap activates the second layout:
+
+    $ tapper
+
+The same + enable bell:
+
+    $ tapper --bell
+
+In addition to default left and right `Ctrl`{.k}s, the left `Shift`{.k} tap activates the third
+keyboard layout, the right `Shift`{.k} — the fourth layout (X Window System session is assumed):
+
+    $ tapper LFSH=@3 RTSH=@4
+
+Ditto but key codes are used instead of symbolic key names, so it works for both X Window System
+and Wayland sessions:
+
+    $ tapper 42=@3 54=@4
+
+Unassign default `Ctrl`{.k}s, use the left `Shift`{.k} for the first layout and the right
+`Shift`{.k} for the second layout:
+
+    $ tapper LCTL= RCTL= LFSH=@1 RTSH=@2
+
+Editing settings
+----------------
+
+Completely ignore existing settings, if any, and specify new configuration: the left `Shift`{.k}
+tap activates the first keyboard layout, the right `Shift`{.k} tap — the second layout. Other
+settings are defaulted: listener, layouter and emitter are selected automatically, bell is
+disabled. The command below is suitable for X Window System session (due to used key names):
+
+    $ tapper --no-load-settings LFSH=@1 RTSH=@2 --save-settings
+
+Ditto for Wayland session:
+
+    $ tapper --no-load-settings KEY_LEFTSHIFT=@1 KEY_RIGHTSHIFT=@2 --save-settings
+
+Ditto (key codes used instead of symbolic key names, it is suitable for both X Window and Wayland
+sessions):
+
+    $ tapper --no-load-settings 42=@1 54=@2 --save-settings
+
+Turn on the bell:
+
+    $ tapper --bell --save-settings
+
+Reset settings to default:
+
+    $ tapper --reset-settings
+
+Examine Tapper settings with `gsettings` tool:
+
+    $ gsettings list-recursively @PACKAGE_GSCHEMA_ID@
+
+Edit Tapper settings with “dconf Editor” graphical application:
+
+    $ tapper --dconf-editor
+
+Running Tapper
+--------------
+
+Start Tapper with the saved settings:
+
+    $ tapper
+
+Start Tapper with the saved settings, but turn off the bell:
+
+    $ tapper --no-bell
+
+Let Tapper start automatically when you log in:
+
+    $ tapper --autostart
+
+Advanced usage
+--------------
+
+### Alternate Characters and Compose
+
+A modifier key, like `Ctrl`{.k}, does its function only in a chord with other key(s): pressing a
+modifier alone has no effect. Tapper gives a modifier key the second function: a tap on the
+assigned modifier is meaningful — it activates a keyboard layout.
+
+Let us consider Alternate Characters Key and Compose Key. (“Alternate Characters Key” is GNOME
+Shell term, X Window System names it “a key to choose the 3rd level”.) Both Alternate Characters
+Key and Compose Key are functions, not physical keys. Alternate Character function is frequently
+assigned to the right `Alt`{.k} key, Compose function — to the `Menu`{.k} key. Alternate Characters
+Key is a modifier: it has effect only in a chord with other key(s), pressing Alternate Characters
+Key alone has no effect. Let us assign both functions, Alternate Characters Key and Compose Key to
+the `Menu`{.k} key:
+
+1.  Configure your desktop to use the `Menu`{.k} key as Alternate Characters Key.
+
+2.  Chose a key physically missing on your keyboard (e. g. `F14`{.k} with code `184`), and
+    configure your desktop to use it as Compose Key.
+
+3.  Run Tapper:
+
+        $ tapper 127=184    # 127 is the Menu key code
+
+Voilà! The `Menu`{.k} key pressed in a chord with other key(s) does Alternate Characters function,
+the same `Menu`{.k} key tapped alone does Compose function; the keyboard has two symmetric
+`Alt`{.k}s (like `Shift`{.k}s and `Ctrl`{.k}s).
+
+Alternatively, the right `Alt`{.k} may be used for Alternate Characters/Compose, letting the
+`Menu`{.k} key show the context menu.
+
+### A key for non-English vimers
+
+(Or rather, for those vimers whose native language is not written in Latin-based script.)
+
+Configure your desktop to disable `Caps Lock`{.k} key first, then:
+
+    $ tapper 58=1,@1    # 58 is the Caps Lock key code, 1 — Esc key code
+
+Now `Caps Lock`{.k} emulates `Esc`{.k} keystroke which activates Vim Normal mode, and activates
+the first layout (presumably `English (US)`), since most of the Vim commands are Latin characters.
+
+### KDE in Wayland session
+
+**Note:** This trick is obsolete now, since Tapper has the KDE layouter, but the idea of the trick
+is still worth to mention it.
+
+KDE allows dedicated shortcuts for every keyboard layouts, but KDE does not accept single
+`Ctrl`{.k} as a shortcut. Tapper can help:
+
+    $ tapper KEY_LEFTCTRL=KEY_F14 KEY_RIGHTCTRL=KEY_F15
+
+Then start “System Settings”, navigate to “Input Devices” → “Keyboard” → “Layout” and add shortcuts
+for your layouts, using the left `Ctrl`{.k} and the right `Ctrl`{.k} — with a help from Tapper they
+will be recognized by KDE as “Launch (7)” and “Launch (8)”.
+
+SECURITY
+========
+
+**Important note:** Using Tapper in multiuser environment may be insecure, see details below.
+Especially, avoid installing a debug build of Tapper, as its debug output can be used as a key
+logger.
+
+The libinput listener reads device files in the `/dev/input` directory. That files are not readable
+by regular users, only members of the `input` group (and the `root` user) can do that. The libevdev
+emitter is even more demanding: it writes the `/dev/uinput` device file, which is writable only by
+the `root` user.
+
+So, to be fully functional, Tapper must be run with the `root` user identity. Up to version 0.7.0,
+it was achieved by setting `set-user-id` bit on the Tapper executable file owned by the `root`
+user. Actually, Tapper does not need the all `root` capabilities: only two capabilities
+`cap_setuid` and `cap_setgid` are sufficient. Capability-based approach was implemented in Tapper
+0.7.1.
+
+Anyway, Tapper still has the great power in the system: the libinput listener listens really all
+input events (key press and key releases, mouse movement, etc) in the system, even if these events
+are generated by another user. For example, one user may lock his session, another user may start
+its own session, but Tapper started by the first user will listen all that types the second user.
+Similarly, input events generated by the libevdev emitter affect all users.
+
+However, Tapper strives to behave responsibly:
+
+*   By default Tapper uses the XRecord listener if possible (the XRecord listener can not listen
+    events generated in another X Window System session).
+*   By default Tapper uses the XTest emitter if possible (events generated by XTest emitter only
+    affect the X Window System session in which Tapper is running).
+*   Tapper uses `cap_setuid` and `cap_setgid` capabilities in the very beginning to get the `root`
+    user and `input` group identities, and drops all the capabilities.
+*   Tapper drops privileged identities as soon as possible:
+    *   Tapper saves privileged identities in the very beginning, and gets them back only
+        temporarily when identity is actually required to complete an operation.
+    *   Tapper drops `root` user identity permanently as soon as the libevdev emitter opens
+        `/dev/uinput` file, or as soon as Tapper learns that the libevdev emitter will not be used.
+    *   Unfortunately, Tapper has to keep `input` group identity while the libinput listener is in
+        use because new device files may appear in `/dev/input` directory while Tapper is running
+        (e. g. if the user plugs in an keyboard or mouse), and libinput will try to open them.
+        However, Tapper drops `input` group identity as soon as it learns that the libinput
+        listener will not be used.
+
+Also, Tapper is free software, its source code is freely available. You can study it to make sure
+that Tapper does not cheat you.
+
+CAVEATS
+=======
+
+GNOME layouter does not work
+----------------------------
+
+The GNOME layouter in Tapper 0.5.0 (and earlier versions) uses the `Eval` GNOME Shell method to
+manage keyboard layouts. In GNOME 41 the `Eval` method is considered insecure and disabled: it is
+still present and callable, so Tapper does not throw any errors, but the method does nothing, so
+Tapper does not switch layouts.
+
+As a temporary workaround for the problem, you may install one of these GNOME Shell extensions:
+
+*   [Unsafe Mode](https://github.com/ramottamado/unsafe-mode), or
+*   [Unsafe Mode Enabler](https://github.com/Clueliss/unsafe-mode-enabler).
+
+These extensions enable the “Unsafe Mode” of the GNOME Shell, so the `Eval` method does actually
+work. Unfortunately, both extensions are considered unsafe and are missing from [GNOME Shell
+Extensions](https://extensions.gnome.org/), so you have to download and install them manually.
+
+The GNOME layouter in Tapper 0.6.0 (and later versions) no longer uses the `Eval` method. Instead,
+it uses Agism, a dedicated GNOME Shell extension that gives 3rd party applications the ability to
+manage keyboard layouts. Agism must be installed and enabled to let Tapper work. BTW, Agism works
+for any GNOME Shell version, starting from 3.28.
+
+Xkb layouter does not work in GNOME
+-----------------------------------
+
+The Xkb layouter does not work in GNOME 3.18 running in Fedora 23. Strictly speaking, the layouter
+does work — it activates the required layout, but broken Mutter immediately switches the layout
+back. This behavior is introduced to Mutter to fix keyboard layout selection in Ubuntu… and break
+layout selection in Fedora. See details in:
+
+*   [Gnome bugzilla](https://bugzilla.gnome.org/show_bug.cgi?id=756543), and
+*   [Red Hat bugzilla](https://bugzilla.redhat.com/show_bug.cgi?id=1292976).
+
+The bug was fixed in Fedora 24, but later it was re-introduced back. Broken Mutter may appear in
+other GNU/Linux distros too.
+
+Do not use the Xkb layouter in GNOME, use the GNOME layouter instead.
+
+Xkb layouter works weird in GNOME
+---------------------------------
+
+Even if Mutter is not broken (e. g. in Fedora 24), Xkb layouter may work weird in GNOME:
+
+*   Since GNOME is not aware about the layout activated by Tapper behind GNOME’s back, keyboard
+    indicator is not updated and may be out of sync.
+
+*   If more than 4 input sources are configured in GNOME, GNOME (re)loads them dynamically to
+    overcome X Window System limitations. The Xkb layouter always activates one of loaded keyboard
+    layouts by an index, but in such conditions the index does not denote the same layout all the
+    time.
+
+Do not use the Xkb layouter in GNOME, use the GNOME layouter instead.
+
+m4_ifelse({{
+
+Mouse button codes depend on the selected listener
+--------------------------------------------------
+
+Depending on the selected listener, mouse buttons may be reported differently.
+
+**`libinput`** listener reports physical mouse buttons: button with code `272` is always the
+left mouse button, `273` is always the right mouse button, etc.
+
+X Window System reports *logical* mouse buttons: 1, 2, 3, etc. Button 1 is the *primary button*,
+which could be left or right depending on system settings. Button 2 is the *secondary button*,
+which could be right or left, respectively.
+
+**`xrecord`** listener has to convert logical buttons reported by X Window System to libinput
+key codes used by the rest of Tapper. However, **`xrecord`** listener is not aware about current
+system settings, and does not know if the primary button is physically left or right. It always
+represent the primary button as `272`, and secondary button as `273` regardless of the system
+settings.
+
+Thus, the same mouse button may be reported differently depending on the selected listener and
+system settings. It does not matter for the primary goal (detect key taps correctly), but may
+affect someone who assigns mouse buttons to activate keyboard layouts.
+
+}})
+
+m4_include({{bugs.md}})
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright 🄯 @PACKAGE_COPYRIGHT_YEAR@ @PACKAGE_COPYRIGHT_HOLDER@.
+License @PACKAGE_LICENSE@ <@PACKAGE_LICENSE_URL@>.\
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+SEE ALSO
+========
+
+*   [Tapper home page].
+*   [Agism home page].
+*   [EBNF].
+*   [Desktop Application Autostart Specification].
+*   [How to Report Bugs Effectively].
+*   capabilities(7) man page.
+*   dconf(1) man page.
+*   dconf(7) man page.
+*   setxkbmap(1) man page.
+
+<!-- Links -->
+
+[Tapper home page]: @PACKAGE_URL@
+[Agism home page]:  https://agism.sourceforge.io/
+[EBNF]:             https://en.wikipedia.org/wiki/Extended_Backus–Naur_form
+[Desktop Application Autostart Specification]: https://specifications.freedesktop.org/autostart-spec/autostart-spec-0.5.html
+
+---
+lang:       en
+section:    1
+title:      @name@
+author:     Van de Bugger
+header:     @PACKAGE_NAME@ @ver@-@rel@
+footer:     @PACKAGE_NAME@ @ver@-@rel@
+date:       @PACKAGE_DATE@
+adjusting:  l
+hyphenate:  false
+...
+
+<!-- end of file -->

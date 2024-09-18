@@ -1,0 +1,36 @@
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: META.txt
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Copying and distribution of this file, with or without modification, are permitted in any
+#   medium without royalty provided the copyright notice and this notice are preserved. This file
+#   is offered as-is, without any warranty.
+#
+#   SPDX-License-Identifier: FSFAP
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+# REUSE-IgnoreStart
+# Reuse triggers on the "Copyright" word below.
+
+Package          : Tapper
+Summary          : Keyboard layout switcher for X Window System and Wayland
+Id               : io.sourceforge.kbd-tapper
+Version          : 0.7.4
+Release          : 0.vdb.1
+Date             : 2023-02-01
+Copyright year   : 2014, 2016—2017, 2019—2023
+Copyright holder : Van de Bugger
+License          : GPLv3+: GNU GPL version 3 or later
+Home URL         : https://kbd-tapper.sourceforge.io/
+Bug report URL   : https://kbd-tapper.sourceforge.io/bugs.html
+License URL      : https://gnu.org/licenses/gpl.html
+Email            : van.de.bugger@gmail.com
+
+# REUSE-IgnoreEnd
+
+# end of file #

@@ -1,0 +1,244 @@
+/*
+    ---------------------------------------------------------------------- copyright and license ---
+
+    File: html/scripts.js.in
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Tapper is free software: you can redistribute it and/or modify it under the terms of the GNU
+    General Public License as published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    Tapper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+    even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along with Tapper.  If not,
+    see <https://www.gnu.org/licenses/>.
+
+    SPDX-License-Identifier: GPL-3.0-or-later
+
+    ---------------------------------------------------------------------- copyright and license ---
+*/
+
+/*
+    Many DOM methods returns collections. Collections are not arrays, and do not have `forEach`
+    method. This function works for both arrays and collections.
+*/
+function for_each( collection, func ) {
+    let i;
+    let result = [];
+    for ( i = 0; i < collection.length; ++ i ) {
+        result[ i ] = func( collection[ i ] );
+    };
+    return result;
+};
+
+/*  Save lang to session cookie. */
+function set_lang(
+    lang    // Two-letter language identifier, 'en' or 'ru'.
+) {
+    document.cookie = 'lang=' + lang + '; path=/; samesite=strict;';
+};
+
+/*  Get language from session cookies, return 'en' if cookie is not set. */
+function get_lang() {
+    const cookies = document.cookie.split( ';' );
+    let lang = 'en';    // Default language.
+    let i;
+    for ( i = 0; i < cookies.length; ++ i ) {
+        const cookie = cookies[ i ].trim();
+        if ( cookie.startsWith( 'lang=' ) ) {
+            lang = cookie.substr( 5 );
+            break;
+        };
+    };
+    return lang;
+};
+
+/*  Navigate to home page. */
+function home_page() {
+    location = get_lang() + '.html';
+};
+
+/*
+    Create Table of Contents (TOC). Place it before the first `level2` section of the document.
+*/
+function CreateTOC() {
+    const Content = {
+        'en' : 'Content',
+        'ru' : 'Содержание',
+    };
+    let list_sections =
+        function (
+            element,    // to list sections in.
+            level,      // level of sections to list.
+            result      // DOM element to place TOC to.
+        ) {
+            const sections = element.querySelectorAll( 'section.level' + level );
+            if ( sections.length > 0 ) {
+                const numbered_item = /^(((\d+)\.)+)\s+(.*)$/;
+                const nbsp = ' ';
+                let parent = '';
+                if ( result.tagName == 'LI' ) {
+                    parent = result.getAttribute( 'data-marker' ).trim();
+                };
+                const level1 = document.getElementsByClassName( 'level1' );
+                let toc;
+                if ( level1 && level1.length > 0 ) {
+                    toc = level1[ 0 ].getAttribute( 'data-toc' );
+                };
+                const list = document.createElement( 'ul' );
+                result.appendChild( list );
+                let number = 1;
+                for_each( sections, function ( section ) {
+                    let heading = section.querySelector( ':scope > h' + level );
+                    if ( heading ) {
+                        heading = heading.innerText;
+                        const li = document.createElement( 'li' );
+                        const a  = document.createElement( 'a' );
+                        a.href = '#' + section.id;
+                        if ( toc == 'number' ) {
+                            li.setAttribute( 'data-marker', parent + number + '.' + nbsp );
+                            a.innerText = heading;
+                            number += 1;
+                        } else {
+                            let match = numbered_item.exec( heading );
+                            if ( match ) {
+                                li.setAttribute( 'data-marker', match[ 1 ] + nbsp );
+                                a.innerText = match[ 4 ];
+                            } else {
+                                /*
+                                    If the nested list is not numbered, let's addsome indent,
+                                    otherwise entire list looks flat.
+                                */
+                                li.setAttribute( 'data-marker', level > 2 ? nbsp.repeat( 4 ) : '' );
+                                a.innerText = heading;
+                            };
+                        };
+                        li.appendChild( a );
+                        list_sections( section, level + 1, li );
+                        list.appendChild( li );
+                    };
+                } );
+            };
+        };
+    const lang = document.firstElementChild.lang || 'en';
+    const toc  = document.createElement( 'section' );
+    toc.id = 'toc';
+    toc.className = 'level2';
+    let h2 = document.createElement( 'h2' );
+    h2.innerText = Content[ lang ];
+    toc.appendChild( h2 );
+    list_sections( document, 2, toc );
+        /*
+            By convention, `level1` section is entire document (and `h1` is the document title), so
+            list sections for TOC starting from `level2` sections.
+        */
+    const s2 = document.querySelector( 'section.level2' );
+    if ( s2 ) {
+        s2.insertAdjacentElement( 'beforebegin', toc );
+    };
+};
+
+/*
+    Normally, TOC section is generated before the first `level2` section. However, if the screen is
+    wide enough, TOC looks better as a floating box, located just before the heading (<h?> element)
+    of the first section.
+*/
+let PositionTOC = function () {
+    const toc = document.querySelector( '#toc' );   // TOC section.
+    if ( ! toc ) {
+        return; // No TOC ⇒ Nothing to do.
+    };
+    const floating = toc.clientTop > 0;         // Does TOC expected to be a floating box?
+    if ( toc.getAttribute( 'data-floating' ) == '' + floating ) {
+        // Attribute is string, while `floating` is boolean, I have to convert boolean to string
+        // in order to compare them.
+        return; // Actual TOC type (floating or not) matching expected TOC type => nothing to do.
+    };
+    const s1 = document.querySelector( 'section.level1' );
+    let el;     // TOC should be located before this element.
+    if ( s1 ) {
+        /*
+            `level1` section exists. TOC should be placed either before the section heading, or
+            before the first non-TOC subsection.
+        */
+        const h1 = s1.querySelector( ':scope > h1' );
+        el = floating ? h1 : s1.querySelector( 'section:not(#toc).level2' );
+    } else {
+        /*
+            `level1` section does not exist. TOC should be placed either before the first non-TOC
+            `level2` section, or before its heading.
+        */
+        const s2 = document.querySelector( 'section:not(#toc).level2' );
+        const h2 = s2.querySelector( ':scope > h2' );
+        el = floating ? h2 : s2;
+    };
+    if ( el.previousSibling != toc ) {
+        el.insertAdjacentElement( 'beforebegin', toc );
+    };
+    toc.setAttribute( 'data-floating', floating ); // Remember TOC type to avoid recalculation.
+};
+
+/*
+    Position the TOC when the document is loaded.
+*/
+document.addEventListener( 'DOMContentLoaded', PositionTOC );
+
+/*
+    And (re)position the TOC if window is resized (or content is zoomed in or out).
+*/
+window.onresize = PositionTOC;
+
+/*
+    Search stuff
+*/
+
+// Enables or disables input text field and search buttons.
+function search_update_status() {
+    let local_html = location.hostname == '';
+        // True in case of local HTML files, false in case of real web site.
+    let prompt = document.getElementById( 'search-text-prompt' );
+    let input = document.getElementById( 'search-text-input' );
+    let empty_text = input.value == '';
+    // Input text field is disabled in case of local HTML files:
+    if ( local_html ) {
+        prompt.classList.add( 'disabled' );
+        input.disabled = true;
+        input.title = "Local HTML files can't be searched.";
+    };
+    // Search buttons are disabled in case of local HTML files or if there is no text to search:
+    for_each( document.getElementsByClassName( 'search-submit-button' ), function ( button ) {
+        button.disabled = local_html || empty_text;
+        if ( local_html ) {
+            button.title = button.value + " can't search local HTML pages.";
+        } else if ( empty_text ) {
+            button.title = "Search terms are not specified.";
+        };
+    } );
+};
+
+// Reacts on pressing Enter in the text input field or pushing one of search buttons.
+function search_on_submit( engine ) {
+    if ( engine == '' ) {
+        // User pressed Enter.
+        // Do not submit visible form but submit default (DuckDuckGo) form instead:
+        document.getElementById( 'search-submit-duck' ).submit();
+        return false;
+    } else {
+        // User pushed one of search buttons.
+        // Prepare appropriate query:
+        let text  = document.getElementById( 'search-text-input' );
+        let query = document.getElementById( 'search-' + engine + '-text' );
+        if ( location.hostname != '' ) {
+            query.value = 'site:' + location.hostname + ' ' + text.value;
+        };
+        // And let the form be submitted:
+        return true;
+    };
+};
+
+/* end of file */

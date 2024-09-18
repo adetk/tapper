@@ -1,0 +1,228 @@
+#!/bin/bash
+
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: test/cmdline-actions.test
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Tapper is free software: you can redistribute it and/or modify it under the terms of the GNU
+#   General Public License as published by the Free Software Foundation, either version 3 of the
+#   License, or (at your option) any later version.
+#
+#   Tapper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+#   even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along with Tapper.  If not,
+#   see <https://www.gnu.org/licenses/>.
+#
+#   SPDX-License-Identifier: GPL-3.0-or-later
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+eval "$PROLOGUE"
+
+done=0      # Number of passed checks.
+
+function check() {
+    local status=$1 name=$2 listener=$3 layouter=$4 assignment=$5 message=$6
+    local status    # Expected status
+    local rc        # Actual status
+    [[ $# -eq 6 ]] || die "oops"
+    say "$name…"
+    run ./tapper \
+        --no-load-settings --no-default-assignments --lay-off \
+        --$listener --$layouter --emitter=dummy \
+        -- $assignment \
+        && rc=0 || rc=$?
+    if [[ $rc -ne $status ]]; then
+        fail "Tapper is expected to return status $status but actually returned $rc."
+    fi
+    if [[ $status -eq 0 ]]; then
+        if egrep -q -e "$message" $tmpfile.out; then :
+        else
+            fail "Tapper is expected to print message, but the expected message is not found." \
+                "Expected message: \`$message'."
+        fi
+    else
+        if egrep -q -e "^(lt-)?tapper: $message" $tmpfile.err; then :
+            #            ^^^^^^
+            # If tapper is built with libtool libraries, the executable would have `lt-` prefix.
+        else
+            fail "Tapper is expected to print error message, but the expected message is not found." \
+                "Expected message: \`$message'."
+        fi
+    fi
+    say "…ok" ""
+    done=$(( done + 1 ))
+}
+
+maxint=4294967295
+huge=100000000000   # Huge integer number which dows not fit 21-bit.
+
+for listener in libinput xrecord; do
+
+    say "Listener: $listener" ""
+
+    if [[ $listener == "libinput" && -z $WITH_LIBINPUT ]]; then
+        say "…skipped: libinput is disabled." ""
+        continue
+    fi
+    if [[ $listener == "xrecord" ]]; then
+        if [[ -z $WITH_X ]]; then
+            say "…skipped: X Window System is disabled." ""
+            continue
+        fi
+        if [[ $XDG_SESSION_TYPE != "x11" || -z $DISPLAY ]]; then
+            say "…skipped: X session is not detected." ""
+            continue
+        fi
+    fi
+
+    for layouter in gnome kde xkb; do
+
+        say "Layouter: $layouter" ""
+
+        if [[ $layouter == "gnome" ]]; then
+            if [[ -z $ENABLE_GNOME ]]; then
+                say "…skipped: GNOME is disabled." ""
+                continue
+            fi
+            if ! is_gnome_desktop; then
+                say "…skipped: GNOME desktop is not detected." ""
+                continue
+            fi
+            if ! is_agism_enabled; then
+                say "…skipped: check uses --gnome option but Agism GNOME extension is not detected." ""
+                continue
+            fi
+        fi
+        if [[ $layouter == "kde" ]]; then
+            if [[ -z $ENABLE_KDE ]]; then
+                say "…skipped: check uses --kde option but KDE is disabled." ""
+                continue
+            fi
+            if ! is_kde_desktop; then
+                say "…skipped: check uses --kde option but KDE desktop is not detected." ""
+                continue
+            fi
+        fi
+        if [[ $layouter == "xkb" ]]; then
+            if [[ -z $WITH_X ]]; then
+                say "…skipped: X Window System is disabled." ""
+                continue
+            fi
+            if ! is_x_session; then
+                say "…skipped: X session is not detected." ""
+                continue
+            fi
+        fi
+
+        case $listener in
+            ( libinput )    keys=( KEY_LEFTCTRL KEY_RIGHTSHIFT );;
+            ( xrecord )     keys=( LCTL RCTL );;
+            ( * )           die "oops";;
+        esac
+        case $layouter in
+            ( xkb )     high=4;;
+            ( kde )     high=4;;
+            ( gnome )   high=100;;
+            ( * )       die "oops";;
+        esac
+
+        # 0 is a valid key code.
+        check 0 "Zero key code" \
+            $listener \
+            $layouter \
+            1=0 \
+            'Tap on key 1:[A-Z_0-9]+ emits tap on key 0\.$'
+
+        check 0 "Good key code" \
+            $listener \
+            $layouter \
+            1=2 \
+            'Tap on key 1:[A-Z_0-9]+ emits tap on key 2:[A-Z_0-9]+\.$'
+
+        check 2 "Huge key code" \
+            $listener \
+            $layouter \
+            1=$huge \
+            'Bad argument ‘1='$huge'’: Bad action ‘'$huge'’: Bad key code ‘'$huge'’: Bad cardinal number ‘'$huge'’: Out of range \[0…'$maxint'\]\.$'
+
+        for key in "${keys[@]}"; do
+
+            check 0 "Good key name ‘$key’, tap" \
+                $listener \
+                $layouter \
+                1=$key \
+                'Tap on key 1:[A-Z_0-9]+ emits tap on key [0-9]+:'$key'\.$'
+
+        done
+
+        check 2 "Unknown key name" \
+            $listener \
+            $layouter \
+            1=assa \
+            'Bad argument ‘1=assa’: Bad action ‘assa’: Bad key name ‘assa’: No such key\.$'
+
+        check 2 "Empty layout" \
+            $listener \
+            $layouter \
+            1=@ \
+            'Bad argument ‘1=@’: Bad action ‘@’: Bad layout ‘’: No layout\.$'
+
+        check 2 "Zero layout index" \
+            $listener \
+            $layouter \
+            1=@0 \
+            'Bad argument ‘1=@0’: Bad action ‘@0’: Bad layout index ‘0’: Out of range \[1…[0-9]+\]\.$'
+
+        check 0 "Good layout index" \
+            $listener \
+            $layouter \
+            1=@1 \
+            'Tap on key 1:[A-Z_0-9]+ activates layout 1:.+\.$'
+
+        check 2 "Huge layout index" \
+            $listener \
+            $layouter \
+            1=@$huge \
+            'Bad argument ‘1=@'$huge'’: Bad action ‘@'$huge'’: Bad layout index ‘'$huge'’: Bad cardinal number ‘'$huge'’: Out of range \[0…'$maxint'\]\.$'
+
+        # TODO: How to test good layout name?
+
+        check 2 "Unknown layout name" \
+            $listener \
+            $layouter \
+            1=@assa \
+            'Bad argument ‘1=@assa’: Bad action ‘@assa’: Bad layout name ‘assa’: No such layout\.$'
+
+        #~ check 2 "Invalid action" \
+            #~ $listener \
+            #~ $layouter \
+            #~ 1=1 \
+            #~ 'Bad argument ‘1=1’: Bad action ‘1’: Invalid action\.$'
+
+        check 0 "Unassignment" \
+            $listener \
+            $layouter \
+            1= \
+            'No assignments made — nothing to do\.$'
+
+        check 2 "Bad second action" \
+            $listener \
+            $layouter \
+            1=@1,-1 \
+            'Bad argument ‘1=@1,-1’: Bad action ‘-1’: Bad key code ‘-1’: Signed key code is not allowed in this context\.$'
+
+    done
+
+done
+
+[[ $done -gt 0 ]] || skip "All checks skipped."
+say "$done checks made."
+
+# end of file #

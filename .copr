@@ -1,0 +1,56 @@
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: .copr
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Copying and distribution of this file, with or without modification, are permitted in any
+#   medium without royalty provided the copyright notice and this notice are preserved. This file
+#   is offered as-is, without any warranty.
+#
+#   SPDX-License-Identifier: FSFAP
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+#   No matching package to install: 'gcc-c++ >= 4.8'
+#   No matching package to install: 'pkgconfig(glibmm-2.4) >= 2.54'
+#   No matching package to install: 'pkgconfig(giomm-2.4) >= 2.54'
+#   No matching package to install: 'pkgconfig(libinput)'
+#
+!~ ^-r epel-6-(i386|x86_64)$
+
+#   gcc 4.8.5 in EPEL-7 fails to build Tapper:
+#
+#       1. Troubles with uniform initialization.
+#       2. Troubles with `Glib::Variant::create` from `Glib::ustring`.
+#
+!~ ^-r epel-7-(aarch64|ppc64le|x86_64)$
+
+#   Out of memory allocating 671088640 bytes!
+#   qemu: uncaught target signal 6 (Aborted) - core dumped
+#
+!~ ^-r fedora-36-armhfp$
+
+#   checking whether the C compiler works... no
+#   configure: error: in `/builddir/build/BUILD/tapper-0.6.3-0.vdb.1.t/_build':
+#   configure: error: C compiler cannot create executables
+#
+!~ ^-r openmandriva-cooker-i686$
+!~ ^-r openmandriva-rolling-i686$
+
+#   No matching package to install: 'perl(Path::Tiny)'
+#
+!~ ^-r rhel-7-x86_64$
+
+#   Errors during downloading metadata for repository 'everything':
+#     - Curl error (56): Failure when receiving data from the peer for http://repo.openeuler.org/openEuler-22.03-LTS/everything/aarch64/repodata/8cb51558c2047c0c83b2106485c2329e643b7722c3e5165e1e0bcee16f0ac70b-filelists.xml.gz [Recv failure: Connection reset by peer]
+#
+!~ ^-r openeuler-22\.03-(aarch64|x86_64)$
+
+#   Troubles with exceptions: throwing an exception crashes the program.
+#
+!~ ^-r opensuse-tumbleweed-aarch64$
+
+# end of file #

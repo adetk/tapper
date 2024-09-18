@@ -1,0 +1,147 @@
+#!/bin/bash
+
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: test/cmdline-keys.test
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Tapper is free software: you can redistribute it and/or modify it under the terms of the GNU
+#   General Public License as published by the Free Software Foundation, either version 3 of the
+#   License, or (at your option) any later version.
+#
+#   Tapper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+#   even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along with Tapper.  If not,
+#   see <https://www.gnu.org/licenses/>.
+#
+#   SPDX-License-Identifier: GPL-3.0-or-later
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+eval "$PROLOGUE"
+
+done=0      # Number of passed checks.
+
+function check() {
+    local status=$1 name=$2 listener=$3 assignment=$4 message=$5
+    local status    # Expected status
+    local rc        # Actual status
+    [[ $# -eq 5 ]] || die "oops"
+    say "$name…"
+    run ./tapper \
+        --no-load-settings --no-default-assignments --lay-off \
+        --$listener --layouter=dummy --emitter=dummy \
+        -- $assignment \
+        && rc=0 || rc=$?
+    if [[ $rc -ne $status ]]; then
+        fail "Tapper is expected to return status $status but actually returned $rc."
+    fi
+    if [[ $status -eq 0 ]]; then
+        if egrep -q -e "$message" $tmpfile.out; then :
+            # ok
+        else
+            fail \
+                "Tapper is expected to print message, but the expected message is not found." \
+                "Expected message: \`$message'."
+        fi
+    else
+        if egrep -q -e "^(lt-)?tapper: $message" $tmpfile.err; then :
+            #            ^^^^^^
+            # If tapper is built with libtool libraries, the executable has `lt-` prefix.
+        else
+            fail \
+                "Tapper is expected to print error message, but the expected message is not found." \
+                "Expected message: \`$message'."
+        fi
+    fi
+    say "…ok" ""
+    done=$(( done + 1 ))
+};
+
+maxint=4294967295
+huge=100000000000   # Huge integer number which dows not fit 21-bit.
+
+for listener in libinput xrecord; do
+
+    say "Listener: $listener" ""
+
+    if [[ $listener == "libinput" && -z $WITH_LIBINPUT ]]; then
+        say "…skipped: libinput is disabled." ""
+        continue
+    fi
+    if [[ $listener == "xrecord" ]]; then
+        if [[ -z $WITH_X ]]; then
+            say "…skipped: X Window System is disabled." ""
+            continue
+        fi
+        if ! is_x_session; then
+            say "…skipped: X session is not detected." ""
+            continue
+        fi
+    fi
+
+    case $listener in
+        ( libinput )    keys=( KEY_LEFTCTRL KEY_RIGHTSHIFT );;
+        ( xrecord )     keys=( LCTL RCTL );;
+        ( * )           die "oops";;
+    esac
+
+    check 0 "Good key code" \
+        $listener \
+        1=@1 \
+        '^Tap on key 1:[A-Z_]+ activates layout 1\.$'
+
+    for key in "${keys[@]}"; do
+        check 0 "Good key name ‘$key’" \
+            $listener \
+            $key=@1 \
+            'Tap on key [0-9]+:'$key' activates layout 1\.$'
+    done
+
+    check 2 "Empty key" \
+        $listener \
+        =@1 \
+        'Bad argument ‘=@1’: Bad key ‘’: No key\.$'
+
+    check 2 "Unknown key name" \
+        $listener \
+        assa=@1 \
+        'Bad argument ‘assa=@1’: Bad key name ‘assa’: No such key\.$'
+
+    check 2 "Negative key code" \
+        $listener \
+        -1001=@1 \
+        'Bad argument ‘-1001=@1’: Bad key code ‘-1001’: Signed key code is not allowed in this context\.$'
+
+    check 2 "Positive key code" \
+        $listener \
+        +1001=@1 \
+        'Bad argument ‘\+1001=@1’: Bad key code ‘\+1001’: Signed key code is not allowed in this context\.$'
+
+    check 0 "Zero key code" \
+        $listener \
+        0=@1 \
+        'Tap on key 0 activates layout '
+
+    # Ditto.
+    check 2 "Key code is out of range" \
+        $listener \
+        100000=@1 \
+        'Bad argument ‘100000=@1’: Bad key code ‘100000’: Out of range \[0…[0-9]+\]\.$'
+
+    check 2 "Key code is huge" \
+        $listener \
+        100000000000=@1 \
+        'Bad argument ‘'$huge'=@1’: Bad key code ‘'$huge'’: Bad cardinal number ‘'$huge'’: Out of range \[0…'$maxint'\]\.$'
+
+done
+
+[[ $done -gt 0 ]] || skip "All checks skipped."
+say "$done checks made."
+
+# end of file #

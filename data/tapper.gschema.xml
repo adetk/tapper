@@ -1,0 +1,148 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+
+    File: data/tapper.gschema.xml
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Copying and distribution of this file, with or without modification, are permitted in any
+    medium without royalty provided the copyright notice and this notice are preserved. This file
+    is offered as-is, without any warranty.
+
+    SPDX-License-Identifier: FSFAP
+
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+<schemalist>
+    <enum id="@PACKAGE_GSCHEMA_ID@.listener">
+        <value value="0" nick="auto"/>
+        <value value="1" nick="libinput"/>
+        <value value="2" nick="xrecord"/>
+    </enum>
+    <enum id="@PACKAGE_GSCHEMA_ID@.layouter">
+        <value value="0" nick="auto"/>
+        <value value="1" nick="dummy"/>
+        <value value="2" nick="gnome"/>
+        <value value="3" nick="kde"/>
+        <value value="4" nick="xkb"/>
+    </enum>
+    <enum id="@PACKAGE_GSCHEMA_ID@.emitter">
+        <value value="0" nick="auto"/>
+        <value value="1" nick="dummy"/>
+        <value value="2" nick="libevdev"/>
+        <value value="3" nick="xtest"/>
+    </enum>
+    <enum id="@PACKAGE_GSCHEMA_ID@.bell">
+        <value value="0" nick="disabled"/>
+        <value value="1" nick="enabled"/>
+    </enum>
+    <schema id="@PACKAGE_GSCHEMA_ID@" path="@PACKAGE_GSCHEMA_PATH@">
+        <key name="listener" enum="@PACKAGE_GSCHEMA_ID@.listener">
+            <default>"auto"</default>
+            <summary>Method to listen user input events.</summary>
+            <description>
+                Possible values are:
+
+                • 'auto' — Examine XDG_SESSION_TYPE environment variable: in case of "x11" session
+                use XRecord listener; otherwise use libinput listener. This is default.
+
+                • 'libinput' — Use low-level libinput library. Suitable for both X Window System
+                and Wayland. The libinput listener requires extra permission, 'tapper' program must
+                be installed properly.
+
+                • 'xrecord' — Use XRecord, an X Window System extension. Is not suitable for
+                Wayland.
+
+                Usually 'auto' is what you need. Use specific listener if Tapper fails to detect
+                session type automatically, or you want to force using XRecord listener because
+                libinput listener fails due to lack of permissions.
+            </description>
+        </key>
+        <key name="layouter" enum="@PACKAGE_GSCHEMA_ID@.layouter">
+            <default>"auto"</default>
+            <summary>Method to activate keyboard layouts.</summary>
+            <description>
+                Possible values are:
+
+                • 'auto' — Examine key assignments and XDG_SESSION_DESKTOP environment variable: if
+                there are no any layout activation actions, use the dummy layouter; in case of
+                "gnome", "gnome-classic", "gnome-xorg" or "ubuntu" desktop, use the GNOME layouter;
+                in case of "KDE" desktop, use the KDE layouter,  otherwise use the Xkb layouter.
+                This is default.
+
+                • 'dummy' — Do not really activate any layouts.
+
+                • 'gnome' — Use the GNOME layouter. It is suitable for GNOME Shell, GNOME Classic
+                and Ubuntu desktops. It *requires* the Agism GNOME Shell extension is installed
+                and *enabled*. The GNOME layouter works for both X Window System and Wayland.
+
+                • 'kde' — Use the KDE layouter. It is suitable for KDE only. The KDE layouter works
+                for both X Window System and Wayland.
+
+                • 'xkb' — Use the Xkb layouter. Suitable for desktops other than GNOME Shell, GNOME
+                Classic, Ubuntu and KDE. The Xkb layouter works for X Windows System only.
+
+                Usually 'auto' is what you need. Use specific layouter if Tapper fails to choose
+                appropriate layouter automatically.
+            </description>
+        </key>
+        <key name="emitter" enum="@PACKAGE_GSCHEMA_ID@.emitter">
+            <default>"auto"</default>
+            <summary>Method to emulate key presses and releases.</summary>
+            <description>
+                Possible values are:
+
+                • 'auto' — Examine key assignments and XDG_SESSION_DESKTOP environment variable: if
+                there are no any key emit actions, use the dummy emitter; in case of "x11" session
+                use the XTest emitter; otherwise use the libevdev emitter. This is default.
+
+                • 'dummy' — Do not actually emit any keys.
+
+                • 'libevdev' — Use low-level libevdev library. The libevdev emitter requires extra
+                permissions, so 'tapper' program must be installed properly.
+
+                • 'xtest' — Use XTest, an X Window System extension.
+
+                Usually 'auto' is what you need. Use specific emitter if Tapper fails to choose
+                appropriate emitter automatically.
+            </description>
+        </key>
+        <key name="bell" enum="@PACKAGE_GSCHEMA_ID@.bell">
+            <default>"disabled"</default>
+            <summary>Ring a bell when a layout is selected.</summary>
+            <description>
+                Actual bell sound depends on the selected layouter and your desktop environment
+                settings, the bell may be visible and/or have no sound at all.
+            </description>
+        </key>
+        <key name="assignments" type="a{is}">
+            <default>{29: "@1", 97: "@2"}</default>
+            <summary>Key assignments.</summary>
+            <!-- No HTML formatting is allowed in the description. -->
+            <description>
+                Format: {KEY: 'ACTION,…', …}
+
+                When KEY is tapped, Tapper executes specified ACTIONs sequentially.
+
+                KEY — key code. Tapper uses Linux kernel key codes regardless of the selected
+                listener. Run 'tapper --list-keys' or 'tapper --show-taps' (and tap desired keys)
+                to discover key codes.
+
+                Some key codes are: Shift (left/right) — 42/54; Ctrl — 29/97; Alt — 56/100;
+                Meta (aka Super or Win) — 125/126; Menu — 127; Caps Lock — 58; Esc — 1; Tab — 15.
+
+                ACTION — action to do, either one:
+
+                • @LAYOUT — activate the given layout, where LAYOUT is the layout index (starting
+                from 1). Run 'tapper --list-layouts' to see the list of configured layouts.
+
+                • KEY — Emulate keystroke on the given key.
+            </description>
+        </key>
+    </schema>
+</schemalist>
+
+<!-- end of file -->

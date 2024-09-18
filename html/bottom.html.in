@@ -1,0 +1,22 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+    File: html/bottom.html.in
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+    This file is part of Tapper.
+    SPDX-License-Identifier: GPL-3.0-or-later
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+<script>
+    CreateTOC();
+</script>
+
+<div id="bottom">
+    <div class="left nowrap" title="Current version">@ver@-@rel@</div>
+    <div id="sf" class="center">
+        <a href="https://sf.net" title="Hosted by"><img alt="Source Forge" src="sf.svg"></a>
+    </div>
+    <div class="right nowrap" title="Release date">@PACKAGE_DATE@</div>
+</div>
+
+<!-- end of file -->

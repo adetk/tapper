@@ -1,0 +1,585 @@
+/*
+    ---------------------------------------------------------------------- copyright and license ---
+    File: etc/dox.css.in
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Copying and distribution of this file, with or without modification, are permitted in any
+    medium without royalty provided the copyright notice and this notice are preserved. This file
+    is offered as-is, without any warranty.
+
+    SPDX-License-Identifier: FSFAP
+
+    ---------------------------------------------------------------------- copyright and license ---
+*/
+
+/*
+    TODO: SearchResultsWindow has too small font.
+*/
+
+html,
+* {
+    font-family:        monospace                   !important;
+    font-size:          inherit                     !important;
+    line-height:        inherit                     !important;
+    height:             auto                        !important;
+    width:              auto                        !important;
+    margin:             0                           !important;
+    padding:            0                           !important;
+}
+
+body {
+    margin:             0.5em 0.5em 0.5em 0.5em     !important;
+    line-height:        1.5                         !important;
+}
+
+p {
+    margin:             1em 0 1em 0                 !important;
+}
+
+/*
+    Page looks like:
+
+        div#top
+            div#titlearea           // Project name, version, short description.
+            div#main-nav            // Main menu: Main page, Modules, Namespaces, Classes, Files.
+            div#nav-path.navpath    // Visible for nested structures: namespaces, classes, files.
+        div.header
+            div.summary             // Page menu (e. g. "Namespaces | Enumerations | Functions").
+            div.headertitle         // Page title (e.g. "Class List", or "XXX File Reference").
+        div.contents
+        hr.footer
+        address.footer
+*/
+
+/*
+    Title area (project name, version, short description):
+
+        div#titlearea
+            div#projectname             "Tapper"
+                span#projectnumber      "0.5.0"
+            div#projectbrief            "Keyboard layout switcher for X Window System and Wayland"
+
+    Let's format project name, number and brief into one line:
+*/
+div#titlearea {
+    font-size:          175%                        !important;
+}
+#projectname {
+    display:            inline                      !important;
+}
+#projectnumber:after {
+    content:            ":";
+}
+#projectbrief {
+    display:            inline;
+}
+
+/*
+    Main menu ("Maian Page",  "Modules", "Namespaces", "Classes", "Files"):
+
+        div#main-nav
+            ul#main-menu.{sm,sm-dox}
+                li +
+                    a (may has class .has-submenu)
+                        span.sub-arrow  (if <a> has class .has-submenu)
+                    ul (if <a> has class .has-submenu)
+                        li
+                            a
+                ...
+                li      // Last <li> — search box
+                    div#MSearchBox
+
+    span.sub-arrow draws ugly arrow with tricky border. Let's turn it off and use "..." instead.
+*/
+div#main-nav {
+    border-bottom:      1px solid #5373B4           !important;
+}
+.sm-dox {
+    background-size:    100%                        !important;
+    background-image:   none                        !important;
+}
+.sm-dox a:hover {
+    background-size:    100%                        !important;
+}
+ul#main-menu a {    /* Main menu items */
+    padding:            0.5em 1em 0.5em 1em         !important;
+    margin:             0 0 0 0                     !important;
+}
+ul#main-menu ul ul { /* Submenu */
+    margin:             0 0 0 5em                   !important;
+}
+ul#main-menu ul a { /* Submenu items */
+    padding:            0.2em 1em 0.2em 1em         !important;
+    margin:             0 0 0 0                     !important;
+}
+a.has-submenu:after {
+    content:            "…";
+}
+span.sub-arrow {
+    display:            none;
+}
+
+/*
+    Search box:
+
+        li
+            div#MSearchBox
+                span.left
+                    img#MSearchSelect
+                    input#MSearchField
+                span.right
+                    a#MSearchClose
+                        img#MSearchCloseImg
+
+    Search select windows appears when user clicks on img#SearchSelect, it contains menu to select
+    the search area:
+
+        div#SearchSelectWindow
+            a.SelectItem *
+
+    Search result window appears when user types a few character in the input field.
+
+        div#MSearchResultsWindow
+            iframe
+
+    Unfortunately, with this CSS I can't fix too small font size in inner HTML in the iframe.
+*/
+#MSearchBox {
+    vertical-align:     center                      !important;
+    margin:             0.5em 0 0.5em 1em           !important;
+    border-radius:      0.5em                       !important;
+    box-shadow:         1px 1px 3px 0px #555        !important;
+}
+img#MSearchSelect {
+    height:             1.5em                       !important;
+    margin:             0 0.2em 0 0.2em             !important;
+
+}
+img#MSearchCloseImg {
+    height:             1.1em                       !important;
+    /*
+        height = 1.5em makes image much larger than #MSearchSelect image, because the latter has
+        some internal margins.
+    */
+    margin:         0 0.2em 0 0.2em                 !important;
+}
+#MSearchSelectWindow {
+    padding:        0.5em 0.5em 0.5em 0.5em         !important;
+}
+
+#MSearchSelectWindow a {
+    padding:        0.2em 1.5em 0.2em 0.5em         !important;
+}
+#MSearchSelectWindow span.SelectionMark {
+    margin-right:   0.25em                          !important;
+}
+span.right a#MSearchClose {
+    padding:        0                               !important;
+    display:        inline-block                    !important;
+    /*
+        Doxygen scripts hows and hides this link, but it changes size of #MSearchBox. Let's make
+        the link always visible, it doesn't hirt.
+    */
+}
+div#MSearchResultsWindow {
+    position:       absolute                        !important;
+    top:            auto                            !important;
+    left:           auto                            !important;
+    right:          0%                              !important;
+    min-height:     30%                             !important;
+    min-width:      30%                             !important;
+}
+iframe#MSearchResults {
+    width:          100%                            !important;
+    height:         100%                            !important;
+}
+
+/*
+    Navigation menu (visible only for hierarchical structures: namespaces, classes, files):
+
+        div#nav-path.navpath
+            ul
+                li.navelem +
+                    a.el
+*/
+li.navelem {
+    padding:            0 1em 0 1em                 !important;
+
+}
+
+/*
+    Page header:
+
+        div.header
+            div.summary         // Page menu (e. g. "Namespaces | Enumerations | Functions").
+            div.headertitle
+                div.title       // "Tapper Documentation" or "Namespace List" or "Class List" etc.
+*/
+div.title {
+    font-size:          125%                        !important;
+    padding:            0.25em 0 0.25em 0           !important;
+}
+
+/*
+    Lists (Namespace List, Class List, File List) looks like:
+
+        div.contents
+            div.textblock           // "Here is a list of all files with brief descriptions:"
+            div.directory
+                div.levels
+                    span            // "1"
+                    span            // "2"
+                    span            // "3"
+                    ...
+                table.directory
+                    tr              // odd row
+                        td.entry
+                        td.desc
+                    tr.even         // even row
+                        td.entry
+                        td.desc
+
+*/
+div.textblock {
+    margin:             1em 0 1em 0                 !important;
+}
+table.directory {
+    width:              100%                        !important;
+}
+div.levels span {
+    margin:             0 0.25em 0 0.25em           !important;
+}
+div.levels span:first-child {
+    margin:             0 0.25em 0 0                !important;
+}
+div.levels span:last-child {
+    margin:             0 0 0 0.25em                !important;
+}
+td.entry {
+    padding-right:      0.5em                       !important;
+}
+td.desc {
+    padding-left:       0.5em                       !important;
+    width:              100%                        !important;
+}
+
+/*
+    Namespace List and Class List:
+
+        td.entry
+            span            // indent, with different `style="width:??px;"` attributes.
+            span.arrow      // if namespace has children
+            span.icona
+                span.icon   // "N" for namespace, "C" for class
+            a               // namespace or class name
+*/
+td.entry > span:first-child[style*="width:0px;"] {
+    width:              0em                         !important;
+}
+td.entry > span:first-child[style*="width:16px;"] {
+    width:              1.5em                       !important;
+}
+td.entry > span:first-child[style*="width:32px;"] {
+    width:              3em                         !important;
+}
+td.entry > span:first-child[style*="width:48px;"] {
+    width:              4.5em                       !important;
+}
+td.entry > span:first-child[style*="width:64px;"] {
+    width:              6em                         !important;
+}
+td.entry > span:first-child[style*="width:80px;"] {
+    width:              7.5em                       !important;
+}
+span.arrow {
+    width:              1.5em                       !important;
+    text-align:         center                      !important;
+}
+.icon {
+    width:              1.5em                       !important;
+    margin:             0.1em 0.5em 0.1em 0em       !important;
+}
+
+/*
+    File List looks like Class List, but uses different icons:
+
+        td.entry
+            span            // indent, with different `style="width:??px;"` attributes.
+            span.arrow      // in case of directory
+            span.iconfopen  // or .iconfclose if directory (folder) is closed
+            a               // file name
+
+
+
+*/
+span.iconfopen,
+span.iconfclosed,
+span.icondoc {
+    width:              1.5em                       !important;
+    background-image:   none;
+    margin:             0.1em 0.5em 0.1em 0em       !important;
+    background-color:   #728DC1;
+    color:              white;
+    border-radius:      4px;
+}
+span.iconfopen:after {
+    content:            "𝑑";    /* These look bad: "📁📂" (in Doxygen colors). */
+    text-align:         center;
+}
+span.iconfclosed:after {
+    content:            "𝑫";
+    text-align:         center;
+}
+span.icondoc {
+    text-align:         center;
+}
+span.icondoc:after {
+    content:            "𝑓";    /* It looks good: "📄". */
+}
+
+/*
+    List of namespace members or class members:
+
+        div.contents
+            div.textblock
+            h3              // "- a -"
+                ul
+                    li
+                        ::marker
+            h3              // "- b -"
+                ul
+                    li
+                        ::marker
+*/
+h3 {
+    margin:             0.5em 0 0.5em 0             !important;
+    text-transform:     uppercase;
+        /* I think capital letters look better than lowercase. */
+    background-color:   #F7F8FB;
+}
+.contents ul {
+    margin:             0.5em 0 0.5em 3em           !important;
+}
+
+/*
+    Class reference:
+
+        div.contents
+            p                       // Class brief description + link "more…".
+          ( div.dynheader           // "Inheritance diagram"
+            div.dyncontent ) *      // Diagram.
+            table.memberdecls *     // Short descriptions only.
+                tr.heading
+                    td
+                        h2.groupheader
+                tr
+                    td.memItemLeft
+                    td.memItemRight
+                tr
+                    td.mdescLeft
+                    td.mdescRight
+            ...
+*/
+table.memberdecls {
+    width:              100%                        !important;
+}
+.memItemRight,
+.memTemplItemRight {
+    width:              100%                        !important;
+        /*
+            Otherwise left column will be too wide.
+        */
+}
+h2.groupheader {
+    font-size:          150%                        !important;
+    margin:             2em 0 0 0                   !important;
+}
+
+/*
+    Class reference (cont.):
+
+        div.contents
+           ...
+            h2.groupheader      // "Detailed description".
+            div.textblock       // Detailed description of the class.
+            h2.groupheader      // "Typedef Documentation"
+            // Class member cards follow.
+
+    Class member card:
+
+        h2.memtitle             // 'Tab' with class member name.
+            span.permalink      // ◆
+            text                // class member name
+            span.overload       // "[1/3]"
+        div.memitem             //
+            div.memproto        // Interface.
+                table.mlabels
+                    tr
+                        td.mlabels-left
+                        td.mlabels-right    // Labels like "vitual", "override".
+                            span.mlabels
+                                span.mlabel     // ~ "virtual"
+            div.memdoc      // Dpcumentation.
+                p
+
+*/
+h2.memtitle {
+    font-size:          125%                        !important;
+    margin:             1em 0 0 0                   !important;
+    padding:            0 0.5em 0 0.5em             !important;
+    min-width:          35%                         !important;
+}
+h2.memtitle span.overload {
+    display:            block;
+    float:              right;
+    margin-left:        0 0 0.5em 0                 !important;
+}
+div.memitem {
+    width:              100%                        !important;
+    margin:             0 0 2em 0                   !important;
+}
+div.memproto,
+div.memdoc {
+    padding:            0.5em 0.5em 0.5em 0.5em     !important;
+}
+td.mlabels-left {
+    width:              100%                        !important;
+}
+td.mlabels-right {
+    vertical-align:     top                         !important;
+}
+span.mlabel {
+    padding:            0 0.25em 0 0.25em           !important;
+    margin:             0 0 0 0.25em                !important;
+}
+
+/*
+    Function/method parameters:
+
+        table.params
+            tr
+                td.paramname
+                td
+*/
+table.params  {
+    margin:             0em 0em 1em 3em             !important;
+}
+table.params td.paramname {
+    text-align:         right                       !important;
+    padding:            0 0.5em 0 0                 !important;
+}
+
+/*
+    Enumerator table:
+
+        table.fieldtable
+            tr
+                th
+            tr
+                td.fieldname
+                td.fielddoc
+                    p *
+
+*/
+table.fieldtable {
+    margin:             1em 0 1em 0                 !important;
+}
+table.fieldtable th,
+table.fieldtable td {
+    padding:            0.25em 0.5em 0.25em 0.5em   !important;
+}
+/* Paragraphs in enumeration table looks bad, fix them. */
+table.fieldtable td p:first-child {
+    margin-top:         0                           !important;
+}
+table.fieldtable td p:last-child {
+    margin-bottom:      0                           !important;
+}
+
+/*
+    Code (@code/@endcode) in documentation:
+
+        div.fragment
+            div.line *
+
+    Verbatim (@verbatim/@endverbatim):
+
+        pre.fragment
+*/
+.fragment {
+    margin:             1em 0 1em 0                 !important;
+    padding:            0.25em 0.5em 0.25em 0.5em   !important;
+}
+div.line {
+    text-indent:        0                           !important;
+}
+
+/*
+    Notes (@note):
+
+    dl.{section,note}
+        dt                  // "Note"
+        dd                  // Text.
+*/
+dl.note {
+    margin:             1em 0.5em 1em 0em           !important;
+    padding-left:       0.5em                       !important;
+}
+
+/*
+    Class index table.
+*/
+div.qindex {
+    text-transform:     uppercase                   !important;
+};
+table.classindex {
+    width:              100%                        !important;
+}
+table.classindex td {
+    padding:            0 0.5em 0 0                 !important;
+}
+table.classindex td:last-child {
+    padding-right:      0                           !important;
+}
+table.classindex td[valign="bottom"] table {
+    width:              100%                        !important;
+}
+div.ah {
+    background-color:   inherit                     !important;
+    border-radius:      0                           !important;
+    border:             none                        !important;
+    background-image:   none                        !important;
+    color:              inherit                     !important;
+    box-shadow:         none                        !important;
+    text-transform:     uppercase                   !important;
+    font-weight:        bold                        !important;
+}
+div.ah:before,
+div.ah:after {
+    content:            "-";
+}
+
+/*
+
+.memSeparator {
+    height:         0 !important;
+    font-size:      0 !important;
+}
+
+
+*/
+
+/*
+    Botton of the page:
+
+        hr.footer
+        address.footer
+*/
+img.footer {
+    height:             1em                         !important;
+}
+
+/* end of file */

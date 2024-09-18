@@ -1,0 +1,387 @@
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: etc/tapper.spec.in
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Copying and distribution of this file, with or without modification, are permitted in any
+#   medium without royalty provided the copyright notice and this notice are preserved. This file
+#   is offered as-is, without any warranty.
+#
+#   SPDX-License-Identifier: FSFAP
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+#   In OpenSuse documentation files are expected to be in `/usr/share/doc/packages/${name}`, while
+#   `make` by default installs documents to `/usr/share/doc/${name}`. `rpmbuild` fails because it
+#   can't find files it expected location.
+#
+#   I would expect OpenSuse's `$configure` macro passes `--docdir` option to `configure` command,
+#   bit it does not. Let's fix it:
+#
+%if 0%{?suse_version}
+    %global configure %{configure} --docdir=%{_docdir}/%{name}
+%endif
+
+%{lua:
+    --[[--
+        Some platform do not have `pandoc` and build fails. Let's disable man pages and metainfo on
+        these platforms to avoid build failure.
+
+        TODO: Use vdb.lua here.
+    --]]--
+
+    function defined( name )
+        return rpm.expand( "%{?" .. name .. ":1}" ) == "1"
+    end
+
+    function say( format, ... )
+        io.stderr:write( string.format( format, ... ) .. "\n" )
+    end
+
+    function die( format, ... )
+        say( format, ... )
+        error( "oops" )
+    end
+
+    function spec( text )
+        print( rpm.expand( text ) )
+    end
+
+    function rpm_version( required )
+        if _rpm_version_ == nil then
+            local program = rpm.expand( "%{_bindir}/rpm" )
+            local output = rpm.expand( "%( " .. program .. " --version )" )
+            if output == "" then
+                die( "Can't find version of '%s' program.", program )
+            end
+            local version = string.match( output, "^RPM version ([-0-9a-z.]+)$" )
+                -- RPM version could be like `4.0.16` or `4.1.0-alpha1`.
+            if version == nil then
+                die( "Can't parse '%s' program output: '%s'", program, output )
+            end
+            _rpm_version_ = version
+        end
+        return rpm.vercmp( _rpm_version_, required ) >= 0
+    end
+
+    function gets( name, default )
+        return defined( name ) and rpm.expand( "%{" .. name .. "}" ) or default
+    end
+
+    function getn( name )
+        return tonumber( gets( name, "0" ) )
+    end
+
+    arch     = gets( "_arch" )
+    centos   = getn( "centos" )
+    eln      = getn( "eln" )
+    epel     = getn( "epel" )
+    euler    = getn( "openEuler" )
+    fedora   = getn( "fedora" )
+    mageia   = getn( "mageia" )
+    mandriva = getn( "omvver" )
+    rhel     = getn( "rhel" )
+    suse     = getn( "suse_version" )
+
+
+
+    --[[--
+        platform                   original macros      fixed macros
+        -------------------------------------------------------------
+        centos-stream+epel-next    centos, epel, rhel   centos + epel
+        centos-stream              centos, rhel         centos
+        epel                       epel, rhel           epel
+        openeuler-22.03            euler=2              euler
+        fedora                     fedora               fedora
+        fedora-eln                 eln, rhel            eln
+        mageia                     mageia=8             mageia
+        mageia-cauldron            mageia=9             mageia
+        openmandriva-cooker        mandriva=22090000    mandriva
+        openmandriva-rolling       mandriva=22012000    mandriva
+        opensuse-leap              suse=1500            suse
+        opensuse-tumbleweed        suse=1599            suse
+        rhel                       rhel                 rhel
+        -------------------------------------------------------------
+    --]]--
+
+    if centos > 0 or epel > 0 or eln > 0 then
+        rhel = 0
+    end
+
+    appstream = not (                               -- appstream is not available in:
+        centos == 8 and epel == 0 or                -- sentos-stream-8
+        euler == 2 or                               -- openeuler-22.03
+        rhel == 8                                   -- rhel-8
+    )
+
+    pandoc = not (                                  -- pandoc is not available in:
+        centos == 9 and epel == 0 or                -- centos-stream-9
+        eln > 0 and arch ~= "i386" or               -- fedora-eln, but not i386
+        euler == 2 or                               -- openeuler-22.03
+        mageia > 0 and mageia <= 9 or               -- mageia-8 and mageia-cauldron (9)
+        mandriva > 0 or                             -- openmandriva-{cooker,rolling}
+        rhel == 9 or                                -- rhel-9
+        suse == 1599 and arch == "i386"             -- opensuse-tumbleweed-i586
+    )
+
+    -- metainfo requires both tools, appstream and pandoc.
+    spec( ( appstream and pandoc and "%bcond_without" or "%bcond_with" ) .. " " .. "metainfo\n" )
+    spec( ( pandoc and "%bcond_without" or "%bcond_with" ) .. " " .. "man\n" )
+
+    if mandriva > 0 then
+        rpm.define( "__perl %{_bindir}/perl" )
+    end
+    if suse > 0 then
+        rpm.define( "_metainfodir %{_datadir}/metainfo" )
+    end
+}
+
+%global appid @PACKAGE_ID@
+%global ver   @PACKAGE_VERSION@
+%global rel   @PACKAGE_RELEASE@
+
+Name:               @PACKAGE_TARNAME@
+Version:            %{ver}
+Release:            %{rel}%{?dist}
+Summary:            @PACKAGE_SUMMARY@
+License:            GPLv3+
+URL:                @PACKAGE_URL@
+Source0:            @PACKAGE_SF_FILES@%{name}-%{ver}-%{rel}.tar.gz
+
+# Fedora packaging guidelines say dependency on coreutils, gzip, shadow-utils should not be
+# declared.
+BuildRequires:      make
+BuildRequires:      pkgconfig
+BuildRequires:      gcc-c++ >= 4.8
+    # Need -std=c++11.
+BuildRequires:      m4
+BuildRequires:      %{__perl}
+    # Perl package name varies: either `perl-interpreter` or `perl-base`.
+    # Let's require `perl` executable to avoid conditional constructs.
+BuildRequires:      desktop-file-utils
+BuildRequires:      perl(open)
+BuildRequires:      perl(strict)
+BuildRequires:      perl(utf8)
+BuildRequires:      perl(warnings)
+BuildRequires:      perl(Getopt::Long)
+BuildRequires:      perl(Path::Tiny)
+BuildRequires:      perl(Pod::Usage)
+BuildRequires:      perl(Try::Tiny)
+BuildRequires:      pkgconfig(glibmm-2.4) >= 2.54
+BuildRequires:      pkgconfig(giomm-2.4) >= 2.54
+BuildRequires:      pkgconfig(libcap)
+BuildRequires:      pkgconfig(libevdev)
+BuildRequires:      pkgconfig(libinput)
+BuildRequires:      pkgconfig(libudev)
+BuildRequires:      pkgconfig(x11)
+BuildRequires:      pkgconfig(xtst)
+%if %{with man}
+BuildRequires:      pandoc
+%endif
+%if %{with metainfo}
+BuildRequires:      pandoc
+BuildRequires:      perl(HTML::Entities)
+BuildRequires:      perl(JSON)
+BuildRequires:      %{_bindir}/appstreamcli
+    # AppStream package name varies: either `appstream` or `AppStream` (openSUSE).
+    # Let's require `appstreamcli` executable to avoid conditional constructs.
+%endif
+%{lua:
+    --[[--
+        In fedora-37, fedora-rawhide and fedora-eln "input" group is created by systemd. "input"
+        group is required to run `make check`: missed "input" group will cause few test failures.
+    --]]--
+    if fedora >= 37 or eln > 0 then
+        print( "BuildRequires: systemd\n" )
+    end
+}
+
+Requires: %{lua:
+    if rpm_version( '4.13.0' ) then
+        --[[--
+            Version expressions were introduced in RPM 4.13.0. Parenthesis are mandatory: otherwise
+            it will be interpreted as three unrelated requirements.
+        --]]--
+        print( "( gnome-shell-extension-agism if gnome-shell )" )
+    else
+        print( "gnome-shell-extension-agism" )
+    end
+}
+
+%{lua:
+    print(
+        -- Weak dependencies were introduced in RPM 4.12.0.
+        ( rpm_version( '4.12.0' ) and "Recommends:" or "Requires:" ) ..
+        " " .. "dconf-editor"
+    )
+}
+
+%description
+Tapper is a keyboard layout switcher for X Window System and Wayland. Tapper
+runs in background, when an assigned key is tapped, Tapper activates the
+corresponding keyboard layout. Tapper unique feature is using modifier keys
+for activating keyboard layouts without losing modifier's functionality.
+
+%prep
+%setup -q -n %{name}-%{ver}-%{rel}
+%{__mkdir} _build
+%{__ln_s} ../conf''igure _build/conf''igure
+    # rpmlint complains "configure-without-libdir-spec". Let's hide configure from rpmlint.
+
+%build
+cd _build
+# `make install` will run `chown`/`chgrp`/`setcap` on tapper and fail, because this operation
+# requires root privileges. `CHOWN=true` replaces `chgrp` with `true` command which ignores all
+# arguments and completes successfully.
+%{configure}                                                        \
+    --%{?with_man:enable}%{!?with_man:disable}-man                  \
+    --%{?with_metainfo:enable}%{!?with_metainfo:disable}-metainfo   \
+    --disable-author-testing                                        \
+    --disable-rpm                                                   \
+    --disable-html                                                  \
+    --disable-dependency-tracking                                   \
+    --with-glib                                                     \
+    --with-libcap                                                   \
+    --with-libevdev                                                 \
+    --with-libinput                                                 \
+    --with-x                                                        \
+    --srcdir=..                                                     \
+    userunitdir=%{_userunitdir}                                     \
+    CHOWN=true CHGRP=true SETCAP=true
+%{make_build}
+
+%install
+cd _build
+%{make_install}
+%if 0%{?fedora}
+%{__rm} %{buildroot}%{_docdir}/%{name}/LICENSE.md
+%{__rm} %{buildroot}%{_docdir}/%{name}/FSFAP.md
+%{__rm} %{buildroot}%{_docdir}/%{name}/GPL-3.0.md
+%endif
+
+%check
+cd _build
+# Non-UTF-8 locale may cause exception when printing non-ASCII characters.
+LANG=C.UTF-8 %{__make} check VERBOSE=1
+
+%files
+%defattr( -, root, root, - )
+%caps(cap_setuid,cap_setgid=p)  %{_bindir}/%{name}
+                                %{_datadir}/applications/%{appid}.desktop
+                                %{_datadir}/glib-2.0/schemas/%{appid}.gschema.xml
+%dir                            %{_docdir}/%{name}
+%doc                            %{_docdir}/%{name}/*
+                                %{?with_man:%{_mandir}/man1/%{name}.1.gz}
+                                %{?with_man:%{_mandir}/ru/man1/%{name}.1.gz}
+%if %{with metainfo}
+                                %{_metainfodir}/%{appid}.metainfo.xml
+%endif
+%if 0%{?fedora}
+%license LICENSE.md
+%license LICENSES/FSFAP.md
+%license LICENSES/GPL-3.0.md
+%endif
+
+%changelog
+* Wed Feb  1 2023 Van de Bugger - 0.7.4-0.vdb.1
+- Tapper v0.7.4.
+
+* Sat Dec 31 2022 Van de Bugger - 0.7.3-0.vdb.1
+- Tapper v0.7.3.
+- Russian man page packed.
+- `make check` made verbose.
+
+* Thu Dec 15 2022 Van de Bugger - 0.7.2-0.vdb.1
+- Tapper v0.7.2.
+
+* Thu Dec 15 2022 Van de Bugger - 0.7.1-0.vdb.2
+- opensuse-leap-15.4 and openeuler-22.03 platforms enabled.
+
+* Thu Dec 15 2022 Van de Bugger - 0.7.1-0.vdb.1
+- Tapper v0.7.1.
+- tapper executable does not use set-user-id bit, capabilities set instead.
+- metainfo file packed.
+
+* Sat Oct 01 2022 Van de Bugger - 0.7.0-0.vdb.1
+- Tapper v0.7.0.
+- fedora-eln (but not fedora-eln-i386): disabled man due to lack of pandoc.
+- Instead of requiring OS-dependent Perl package, OS-independent Perl executable is required.
+- gnome-shell-extension-agism is required, if gnome-shell is installed.
+- dconf-editor is recommended.
+
+* Tue Jun 14 2022 Van de Bugger - 0.6.3-0.vdb.1
+- Tapper v0.6.3.
+- Man page is disabled on epel-9 due to lack of pandoc.
+
+* Sat Jun 04 2022 Van de Bugger - 0.6.2-0.vdb.1
+- Tapper v0.6.2.
+- 0.6.1-0.vdb.1 contains debug build. Fixed.
+
+* Thu Jun 02 2022 Van de Bugger - 0.6.1-0.vdb.1
+- Tapper v0.6.1.
+
+* Wed Jun 01 2022 Van de Bugger - 0.6.0-0.vdb.1
+- Tapper v0.6.0.
+
+* Sun Jan 03 2021 Van de Bugger - 0.5.0-0.vdb.1
+- Tapper v0.5.0.
+- Testing is enabled.
+- Mageia RPM built without man page, since pandoc is not available.
+
+* Wed May 06 2020 Van de Bugger - 0.4.4-0.vdb.1
+- Updated to 0.4.4.
+
+* Tue Mar 10 2020 Van de Bugger - 0.4.3-0.vdb.1
+- Updated to 0.4.3.
+
+* Wed Nov 13 2019 Van de Bugger - 0.4.2-0.vdb.2
+- Workarounded build problem on OpenSuse.
+- giomm-2.4 >= 2.54 required.
+- license is Fedora-specific macro.
+
+* Wed Aug 14 2019 Van de Bugger - 0.4.2-0.vdb.1
+- Updated to 0.4.2.
+
+* Tue Aug 06 2019 Van de Bugger - 0.4.1-0.vdb.1
+- Updated to 0.4.1.
+
+* Mon Jul 29 2019 Van de Bugger - 0.4.0-0.vdb.1
+- Updated to 0.4.0.
+- rpm macros used instead of plain commands.
+- Appropriate BuildRequires tags added.
+- BuildRequires tags use pkgconfig instead of devel rpms.
+- Full Source0 specified.
+- License files installed into licenses directory.
+
+* Fri Mar 10 2017 Van de Bugger - 0.3.1-1.vdb
+- Updated to 0.3.1.
+
+* Thu Jan 19 2017 Van de Bugger - 0.3.0-1.vdb
+- Updated to 0.3.0.
+- New dependencies added: gcc-c++ 4.8, glib2-devel, json-glib-devel.
+
+* Fri Dec 02 2016 Van de Bugger - 0.2.2-1.vdb
+- Updated to 0.2.2.
+
+* Sun Jan 31 2016 Van de Bugger - 0.2.1-1.vdb
+- Updated to 0.2.1.
+- Pandoc added to build requirements (its required to build man page).
+- configure run with --enable-man option.
+- CPPFLAGS dropped — it is not required any more because debug log is not enabled by default.
+- Man page added to the package.
+
+* Sat Jan 16 2016 Van de Bugger - 0.2-1.vdb
+- Updated to 0.2.
+- Dropped dependency on glib2 (because of dropped Gnome support).
+- Updated description.
+- configure run with --disable-rpm --disable-html options.
+- configure run with --libdir option to make rpmlint happy.
+- clean action dropped accordingly to Fedora guidelines.
+
+* Wed Jul 23 2014 Van de Bugger - 0.1-1.vdb
+- Initial release.
+
+# end of file #

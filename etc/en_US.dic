@@ -1,0 +1,103 @@
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: etc/en_US.dic
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Copying and distribution of this file, with or without modification, are permitted in any
+#   medium without royalty provided the copyright notice and this notice are preserved. This file
+#   is offered as-is, without any warranty.
+#
+#   SPDX-License-Identifier: FSFAP
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+Agism
+AltLinux
+Autoconf
+Automake
+BTN
+Copr
+Ctrl
+Ctrls
+EBNF
+Esc
+Eval
+FSFAP
+GLib
+GNOME's
+GPL
+GPLv
+GSettings
+JSON
+Jozef
+KDE
+KOT
+LCTL
+LEFTCTRL
+LXDE
+LXQt
+Mageia
+OpenMandriva
+RHEL
+Riha
+SourceForge
+TODO
+Tatham's
+Vitaly
+Wayland
+XDG
+XRecord
+XTest
+Xfce
+Xkb
+autostart
+aziat
+bugzilla
+cppcheck
+dconf
+de
+dev
+distro
+distros
+emorozov
+glibc
+gsettings
+io
+kbd
+kde
+layouter
+layouters
+libevdev
+libinput
+libjson
+md
+merchantability
+metainfo
+multiuser
+musl
+ok
+openSUSE
+papin
+prebuilt
+ru
+sa
+setgid
+setuid
+setxkbmap
+sourceforge
+syslog
+touchpad
+ubuntu
+uinput
+unassign
+unterminated
+vimers
+voilà
+xkb
+xrecord
+xtest
+
+# end of file #

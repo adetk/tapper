@@ -1,0 +1,40 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+    File: html/top.html.in
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+    This file is part of Tapper.
+    SPDX-License-Identifier: GPL-3.0-or-later
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+<div id="top">
+    <div class="left" id="globe">
+        <a href="map.html" title="Site map">
+            <span id="globe-1">🌍</span>
+            <span id="globe-2">🌏</span>
+            <span id="globe-3">🌎</span>
+        </a>
+    </div>
+    <div class="center">
+        <script>
+            document.write(
+                '<a href="javascript: home_page();" title="Home page">@PACKAGE_NAME@</a>'
+            );
+        </script>
+        <noscript>
+            <a href="en.html" title="Home page">@PACKAGE_NAME@</a>
+        </noscript>
+    </div>
+    <div class="right">
+        <!--
+            Using `🇷🇺` looks like a good idea, but it is not (on 2022-05-18): Firefox v100.0
+            displays Russian flag incorrectly: the top third of the flag is transparent, not white.
+            So, let us use image instead.
+        -->
+        <img id="flag" src="russia.svg" alt="Flag of Russia" title="Made in Russia">
+    </div>
+</div>
+
+<!-- TODO: Add menu -->
+
+<!-- end of file -->

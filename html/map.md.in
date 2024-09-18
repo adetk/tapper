@@ -1,0 +1,50 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+    File: html/map.md.in
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+    This file is part of Tapper.
+    SPDX-License-Identifier: GPL-3.0-or-later
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+Site map
+========
+
+```{=html}
+m4_include({{search.html}})
+```
+
+### Home pages
+
+*   [English]
+*   [Русский]
+
+### Download
+
+*   [Binary RPMs][rpms] for Fedora, Mageia, OpenMandriva, openSUSE, recent versions of RHEL and its
+    clones.
+*   [Source RPM][srpm] for those who want to rebuild RPM themselves.
+*   [Source tarball][tarball] for traditional `configure && make`, or for packers.
+
+### Documentation
+
+*   @name@(1) man page:
+    *   [man page][man.en] — read it before asking for help.
+    *   🆕 [справочная страница][man.ru] — прочитайте её, прежде чем просить помощи.
+*   [AUTHORS.md]    — the list of @Name@ authors.
+*   [BUGS.md]       — how to report bugs or ask for help.
+*   [INSTALL.md]    — how to build and install @Name@ from sources.
+*   [LICENSE.md]    — copyright statement and license terms.
+    *   [FSFAP.md]  — FSF All Permissive License.
+    *   [GPLv3.md]  — GNU Public License version 3.
+*   [MANIFEST.md]   — the complete list of @Name@ source files.
+*   [NEWS.md]       — user-visible changes in @Name@.
+
+### See also
+
+*   [Agism] — GNOME Shell extension allowing @Name@ to work in GNOME.
+*   [Project page][SF/Summary] @ [SourceForge] — Source releases are published there.
+*   [Project page][copr/project] @ [Fedora Copr][copr] — RPM repositories for Fedora, Mageia,
+    OpenMandriva, openSUSE, RHEL and clones.
+
+<!-- end of file -->

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: test/termination.test
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Tapper is free software: you can redistribute it and/or modify it under the terms of the GNU
+#   General Public License as published by the Free Software Foundation, either version 3 of the
+#   License, or (at your option) any later version.
+#
+#   Tapper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+#   even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along with Tapper.  If not,
+#   see <https://www.gnu.org/licenses/>.
+#
+#   SPDX-License-Identifier: GPL-3.0-or-later
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+eval "$PROLOGUE"
+
+[[ $# -eq 0 ]] && iters=5
+[[ $# -eq 1 ]] && iters="$1"
+[[ $# -gt 1 ]] && die "Too many arguments"
+
+# --libinput listener requres additional permissions to open `/dev/input/event*` file,
+# the test will fail. In contrast, --xrecord interceptior can be used with no extra permissions.
+[[ -n $WITH_X ]] || \
+    skip "The test can be run only with XRecord listener, but X Window System is disabled."
+is_x_session || \
+    skip "The test can be run only with XRecord listener, but X session is not detected."
+
+done=0
+for signal in INT TERM; do
+    say "Signal: $signal"
+    for (( i=0; i < iters; i = i + 1 )); do
+        ./tapper --no-load-settings --xrecord &
+        sleep 1
+        kill -s INT %1
+        wait -n %1
+        done=$(( done + 1 ))
+    done
+    say "…ok" ""
+done
+say "$done checks made."
+
+# end of file #

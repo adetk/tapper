@@ -1,0 +1,33 @@
+#   ---------------------------------------------------------------------- copyright and license ---
+#
+#   File: data/tapper.desktop
+#
+#   Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+#
+#   This file is part of Tapper.
+#
+#   Copying and distribution of this file, with or without modification, are permitted in any
+#   medium without royalty provided the copyright notice and this notice are preserved. This file
+#   is offered as-is, without any warranty.
+#
+#   SPDX-License-Identifier: FSFAP
+#
+#   ---------------------------------------------------------------------- copyright and license ---
+
+[Desktop Entry]
+GenericName=Keyborad layout switcher
+Name=@PACKAGE_NAME@
+Name[ru]=Таппер
+Comment=Keyboard layout switcher for X Window System and Wayland
+Comment[ru]=Включалка раскладок клавиатуры для Иксов и Вайланда
+Exec=@bindir@/@name@ --quiet --syslog
+#   Be quiet because:
+#   1.  Printing introductionary messages requires GNOME (for retrieving names of keyboard
+#       layouts). If Tapper is added to AutoStart, it may start before GNOME and fail.
+#   2.  Nobody will see introductionary messages if Tapper started thru Desktop Entry anyway.
+Icon=input-keyboard
+Terminal=false
+Type=Application
+Categories=System;Utility;
+
+# end of file #

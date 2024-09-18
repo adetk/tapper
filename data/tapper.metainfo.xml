@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ────────────────────────────────────────────────────────────────────── copyright and license ───
+
+    File: data/tapper.metainfo.xml
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Copying and distribution of this file, with or without modification, are permitted in any
+    medium without royalty provided the copyright notice and this notice are preserved. This file
+    is offered as-is, without any warranty.
+
+    SPDX-License-Identifier: FSFAP
+
+    ────────────────────────────────────────────────────────────────────── copyright and license ───
+-->
+<component>
+    <id>@PACKAGE_ID@</id> <!-- TODO: Replace hyphen in id with underscore. -->
+    <name>@PACKAGE_NAME@</name>
+    <name lang="ru">Таппер</name>
+    <summary>@PACKAGE_SUMMARY@</summary>
+    <icon type="stock">input-keyboard</icon>
+    <project_license>GPL-3.0-or-later</project_license>
+    <launchable type="desktop-id">@PACKAGE_ID@.desktop</launchable>
+    <metadata_license>FSFAP</metadata_license>
+    <description>
+        <p>
+            Tapper is a keyboard layout switcher for X Window System and Wayland. Tapper runs in
+            background, when an assigned key is tapped, Tapper activates the corresponding keyboard
+            layout. Tapper key feature is using modifier keys for switching keyboard layouts
+            without losing modifier’s functionality. Tapper works for GNOME, GNOME Classic,
+            Cinnamon, i3, KDE, LXDE, LXQt, Mate, Ubuntu, Xfce desktops.
+        </p>
+        <p>
+            A <em>tap</em> means that a single key is pressed and quickly released, so: (1) no
+            other keys are pressed or released at this time, and (2) period between pressing the
+            key and releasing it is shorter than keyboard repeat delay (the amount of time you have
+            to hold down a key before it starts repeating; usually 0.5 second, but it depends on
+            your desktop settings).︎
+        </p>
+        <p lang="ru">
+            Таппер — включалка раскладок клавиатуры для Иксов и Вайланда. Таппер работает в фоновом
+            режиме, и при ударе по назначенной клавише Таппер включает соответствующую ей раскладку
+            клавиатуры. Особенность Таппера заключается в использовании клавиш-модификаторов для
+            включения раскладок без потери функций модификаторов. Таппер работает в Гноме,
+            Классическом Гноме, и3, КДЕ, ЛХДЕ, ЛХКт, Мате, Хфце, Циннамоне.
+        </p>
+        <p lang="ru">
+            <em>Удар</em> — нажатие и быстрое отпускание одной клавиши, при этом: (1) во время
+            удара никакие другие клавиши не нажаты, не нажимаются и не отпускаются, и (2) период
+            между нажатием и отпусканием короче задержки автоповтора (обычно автоповтор включается
+            если клавиша удерживается более половины секунды; это зависит от настроек рабочего
+            стола).
+        </p>
+        <p lang="ru">
+            «Удар» по-английски — <em>tap</em>. Отсюда происходит название программы.
+        </p>
+    </description>
+    <categories>
+        <category>System</category>
+        <category>Utility</category>
+    </categories>
+    <keywords>
+        <keyword>keyboard layout</keyword>
+        <keyword>keyboard layout switcher</keyword>
+        <keyword lang="ru">раскладка клавиатуры</keyword>
+        <keyword lang="ru">включалка раскладок клавиатуры</keyword>
+    </keywords>
+    <url type="homepage">@PACKAGE_URL@</url>
+    <url type="bugtracker">@PACKAGE_URL@bugs.html</url>
+    <url type="help" lang="en">@PACKAGE_URL@tapper.en.html</url>
+    <!-- url type="help" lang="ru">@PACKAGE_URL@tapper.ru.html</url -->
+    <provides>
+        <binary>@bindir@/@name@</binary>
+    </provides>
+    <recommends>
+        <id>ca.desrt.dconf-editor.desktop</id>
+        <control>keyboard</control>
+    </recommends>
+@RELEASES@
+</component>
+
+<!-- end of file -->

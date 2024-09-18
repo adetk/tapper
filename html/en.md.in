@@ -1,0 +1,335 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+
+    File: html/en.md.in
+
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+
+    This file is part of Tapper.
+
+    Tapper is free software: you can redistribute it and/or modify it under the terms of the GNU
+    General Public License as published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    Tapper is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+    even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along with Tapper.  If not,
+    see <https://www.gnu.org/licenses/>.
+
+    SPDX-License-Identifier: GPL-3.0-or-later
+
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+Tapper
+======
+
+RDF_DESCRIPTION({{ RDF_NAME({{ **Tapper** }}) is a RDF_HEADLINE({{ RDF_KEYWORD({{ keyboard layout
+switcher }}) for RDF_KEYWORD({{ X Window System }}) and RDF_KEYWORD({{ Wayland }})[^graphical]}}).
+Tapper runs in background, when an assigned key is RDF_KEYWORD({{ tap }},{{ tapped[^tap] }}),
+Tapper activates the corresponding RDF_KEYWORD({{ keyboard layout }})[^no-toggle]. Tapper key
+feature is using RDF_KEYWORD({{ modifier keys }}) for switching keyboard layouts without losing
+modifier’s functionality[^modifiers]. Tapper works[^works] for RDF_KEYWORD({{ GNOME }}),
+RDF_KEYWORD({{ GNOME Classic }}), RDF_KEYWORD({{ Cinnamon }}), RDF_KEYWORD({{ i3 }}),
+RDF_KEYWORD({{ KDE }}), RDF_KEYWORD({{ LXDE }}), RDF_KEYWORD({{ LXQt }}), RDF_KEYWORD({{ Mate }}),
+RDF_KEYWORD({{ Xfce }}). There are prebult RDF_KEYWORD({{ RPM package }})s for
+RDF_OPERATING_SYSTEM({{ Fedora }}), RDF_OPERATING_SYSTEM({{ Mageia }}), RDF_OPERATING_SYSTEM({{
+OpenMandriva }}), RDF_OPERATING_SYSTEM({{ openSUSE }}), recent versions of RDF_OPERATING_SYSTEM({{
+RHEL }}) and its clones. Source tarball for `configure && make` is also available, it should work
+for any RDF_OPERATING_SYSTEM({{ GNU/Linux }}) distro, including (but not limited to)
+RDF_OPERATING_SYSTEM({{ Alt }}), RDF_OPERATING_SYSTEM({{ Arch }}), RDF_OPERATING_SYSTEM({{ Debian
+}}), RDF_OPERATING_SYSTEM({{ Ubuntu }}) and RDF_OPERATING_SYSTEM({{ Void }})[^void]. Tapper is
+RDF_KEYWORD({{ RDF_OFFER({{ RDF_PRICE({{ 0.0 }},{{ free }})RDF_PRICE_CURRENCY({{ USD }},{{ - }})
+}}) software }}). }})
+
+[^graphical]:
+    Tapper works in graphical desktop session only, in either X Window System or Wayland. Tapper
+    does not work in the text console (don’t confuse [text console] with a [terminal emulator]
+    running in graphical session, though).
+
+[text console]: https://en.wikipedia.org/wiki/Virtual_console
+[terminal emulator]:    https://en.wikipedia.org/wiki/Terminal_emulator
+
+[^tap]:
+    A *tap* means that a *single* key is pressed and *quickly* released, so: (1) no other keys are
+    pressed or released at this time, and (2) period between pressing the key and releasing it is
+    shorter than keyboard repeat delay (the amount of time you have to hold down a key before it
+    starts repeating; usually 0.5 second, but it depends on your desktop settings).
+
+[^no-toggle]:
+    The assigned key *always activates the same* layout. Tapper *never toggles* layouts, there is a
+    *dedicated* key for each layout.
+
+[^modifiers]:
+    If a modifier key is assigned to activate a layout, it continues to be a modifier key. For
+    example, if the left `Ctrl`{.k} key is assigned to activate the first layout, only *tap* on the
+    the left `Ctrl`{.k} activates the first layout, `Ctrl`{.k}+`C`{.k} is still interpreted as
+    `^C`.
+
+[^works]:
+    Tapper works for all listed desktops, but not all listed desktops work on top of Wayland. See
+    the “[Desktops]” section.
+
+[^void]:
+    Tapper requires glibc, compilation will fail with musl C standard library.
+
+Current version
+---------------
+
+Current version is RDF_SOFTWARE_VERSION({{ @ver@-@rel@ }}), released on RDF_DATE_PUBLISHED({{
+@PACKAGE_DATE@ }}). See RDF_RELEASE_NOTES({{ [NEWS.md] }}) for list of user-visible changes.
+
+<!--
+    Skip "Getting Tapper" in case of README: if user reads README, he has already got Tapper
+    source.
+-->
+
+Desktops
+--------
+
+**Important note:** Starting from version 0.6.0, Tapper requires the [Agism] GNOME Shell extension
+to work for GNOME, GNOME Classic, and Ubuntu[^ubuntu] desktops.
+
+Tapper is known to work for the following desktops (and window managers):
+
+Desktop                X Window System        Wayland
+-----------------    -------------------    -----------
+[Cinnamon]             ✓
+[GNOME]                ✓                      ✓
+GNOME Classic          ✓                      ✓
+[i3]                   ✓
+[KDE]                  ✓                      ✓
+[LXDE]                 ✓
+[LXQt]                 ✓
+[Mate]                 ✓
+Ubuntu                 ✓                      ✓
+[Xfce]                 ✓
+
+Empty cell in the "Wayland" column means that Tapper has not been tested in this configuration (due
+to the lack of easy-to-use distros[^easy-to-use] that runs the desktop in a Wayland session out of
+the box).
+
+If your desktop (or window manager) is not listed in the table:
+
+*   X Window System: Tapper will likely work (if the window manager does not do weird
+    things[^weird-things] with keyboard layouts).
+*   Wayland: Tapper will (likely?) not work.
+
+[^ubuntu]:
+    Ubuntu OS pretends to run Ubuntu desktop: in Ubuntu graphical session, the environment variable
+    `XDG_SESSION_DESKTOP` value is `ubuntu`. However, the Ubuntu desktop is actually the GNOME
+    Shell with few Ubuntu-specific extensions.
+
+[^easy-to-use]:
+    *Easy-to-use distro* in this context means "there is a live CD or DVD image to run the distro
+    in a virtual machine without tedious and time-consuming installation".
+
+[^weird-things]:
+    Mutter, the GNOME window manager, is an example of a window manager that does weird things, see
+    section “[Xkb layouter does not work in GNOME]” in the [tapper(1)][man.en] man page. However,
+    that seems to be the only example.
+
+m4_ifelse(README,1,{{
+
+Installing Tapper
+-----------------
+
+See [INSTALL.md] for build and install instructions.
+
+Documentation
+-------------
+
+See Tapper documentation online at <@PACKAGE_URL@> or build it locally:
+
+    $ make html
+
+Then open `index.html` in your browser.
+
+Tapper also recognizes `--help` command line options:
+
+    $ tapper --help
+
+}},{{
+
+Installing
+----------
+
+<!-- TODO: Add a link to map/download. -->
+
+**Important note:** Starting from version 0.6.0, Tapper requires the [Agism] GNOME Shell extension
+to work for the GNOME, GNOME Classic, and Ubuntu desktops. If you install the Tapper RPM from the
+`vandebugger/tapper` Copr repository as described below, [Agism] will be installed automatically,
+otherwise you will have to install it yourself.
+
+**Important note:** Regardless of how you install [Agism], **you must [enable Agism]** to let
+Tapper work in GNOME, GNOME Classic, and Ubuntu desktops.
+
+### Fedora
+
+    $ sudo dnf copr enable vandebugger/tapper
+    $ sudo dnf install tapper
+
+### Arch
+
+See [kbd-tapper][aur-kbd-tapper] package by [sirocco] in [AUR]. See [Arch User Repository] for
+instruction how to build and install AUR packages.
+
+### Mageia
+
+    $ su -c "dnf copr enable vandebugger/tapper"
+    $ su -c "dnf install tapper"
+
+### OpenMandriva
+
+Replace `$VER` with the version of your system, e. g. `cooker` or `rolling`:
+
+    $ sudo wget -O /etc/yum/repos.d/vandebugger-tapper.repo https://copr.fedorainfracloud.org/coprs/vandebugger/tapper/repo/openmandriva-$VER
+    $ sudo dnf install tapper
+
+### openSUSE
+
+Replace `$VER` with the version of your system, e. g. `leap-15.4` or `tumbleweed`:
+
+    $ sudo zypper addrepo https://copr.fedorainfracloud.org/coprs/vandebugger/tapper/repo/opensuse-$VER/vandebugger-tapper-opensuse-$VER.repo
+    $ sudo zypper install tapper
+
+### All/Others
+
+<!-- TODO: Add few words about it. -->
+
+Build Tapper from [sources][tarball]. See [INSTALL.md] for build and install instructions.
+
+<!-- TODO: Binary RPMS, old releases. -->
+
+}})
+
+Configuring
+-----------
+
+By default Tapper selects listener, emitter and layouter automatically, assigns the left `Ctrl`{.k}
+key to activate the first layout, the right `Ctrl`{.k} key to activate the second layout, does not
+ring the bell when it activates a layout.
+
+Run tapper with `--dconf-editor` option to open *dconf Editor*[^dconf-editor] app (command
+`dconf-editor`) to edit Tapper settings:
+
+    $ tapper --dconf-editor
+
+[^dconf-editor]:
+    Probably, you will have to install it first (in case of Fedora, run
+    `sudo dnf install dconf-editor`).
+
+Alternatively, configure Tapper using command line options and arguments in combination with
+`--save-settings` option. See [tapper(1)][man.en] man page for help on Tapper terms (e. g.
+listener, layouter and emitter), command line options and usage examples.
+
+Running
+-------
+
+Configure your system to run Tapper automatically each time you log in the graphical session. The
+following command should work for any desktop respecting the [Desktop Application Autostart
+Specification]:
+
+    $ tapper --autostart
+
+It can be done using the grahpical tools, but in such case the specific steps depend on your
+desktop.
+
+### GNOME
+
+Use *Tweaks* app (command `gnome-tweaks`) to add Tapper to *Startup Applications*.
+
+### KDE
+
+Use *System Settings* app (command `systemsettings5`), follow to *Startup and Shutdown* to add
+Tapper to *Autostart*.
+
+Reporting bugs
+--------------
+
+See [BUGS.md].
+
+Copyright and license
+---------------------
+
+[![GPLv3+ logo]][GPLv3]
+
+Copyright 🄯 RDF_COPYRIGHT_YEAR({{ @PACKAGE_COPYRIGHT_YEAR@ }}) RDF_COPYRIGHT_HOLDER({{ RDF_NAME({{
+@PACKAGE_COPYRIGHT_HOLDER@ }}) }}). License is RDF_LICENSE({{ [GPLv3] }})+, see [LICENSE.md] for
+details.
+
+Footnotes
+---------
+
+<!-- Metadata -->
+
+---
+description:    "RDF_DESCRIPTION"
+keywords:       "RDF_KEYWORDS"
+vocab:          "https://schema.org/"
+resource:       "#@PACKAGE_NAME@"
+typeof:         SoftwareApplication
+properties:
+    applicationCategory:        Utility
+    applicationSubCategory:     Keyboard layout switcher
+    url:                        @PACKAGE_URL@
+    downloadUrl:                @PACKAGE_SF_FILES@@name@-@ver@.tar.gz
+    fileFormat:                 application/x-gtar
+...
+
+RDF_DISCARD({{
+
+## Why?
+
+You probably know the words "ghbdtn" and "руддщ", which are obtained if you start typing without
+making sure that the current keyboard layout corresponds to the language of the typed text. I guess
+users actively typing in two (or more) languages make such mistakes many times a day[^tt].
+
+[^tt]:
+    I think number of such mistakes does not depend on touch typing. Touch typists notice mistakes
+    earlier, but make such mistakes too.
+
+A long time ago (I worked in Windows those days) I accidentally discovered: using *two different*
+keys for selecting keyboard layouts (rather than *one* key for *toggling* layouts) drastically
+reduces the number of "ghbdtn" mistakes.
+
+Also I found it is very convenient to select layouts by [tapping] `Ctrl` keys (the `Left Ctrl`
+[tap] selects English layout, while the `Right Ctrl` [tap] selects Russian layout) because [tap] on
+a key requires less efforts and takes less time than pressing a "chord" (like `Ctrl`+`Shift` or
+`Alt`+`Shift`). I have to say I used `RusLat95` keyboard layout switcher written by Сергей
+Быков[^ruslat95].
+
+[^ruslat95]:
+    It is a free but closed-source program. It seems it is abandoned now, but old versions still
+    can be found in the net.
+
+When I started to work in GNU/Linux, I wanted to use the same keys. There was such option in X
+Window configuration files! However, using `Left Ctrl` and `Right Ctrl` as layout selectors makes
+typing control characters impossible: `Left Ctrl`+`v` does not paste clipboard content any more,
+but selects English layouts and types plain letter "v".
+
+I tried to configure X Window with no success. I only achieved selecting the first layout by `Left
+Ctrl`+`Left Win` and the second by `Right Ctrl`+`Menu`[^lctrl_lwin_rctrl_menu]. This was not what I
+want. This was the reason for writing Tapper.
+
+[^lctrl_lwin_rctrl_menu]:   My patch was accepted upstream.
+
+### Toggler
+
+A key (or key combination, e. g. `Ctrl`+`Shift` or `Win`+`Space`) which activates the *next*
+keyborad layout.
+
+In case of two layouts toggler either selects the first layout (if the second was active before) or
+selects the second (if the first was active before).
+
+}})
+
+``` {=html}
+<script>
+    set_lang( 'en' );
+</script>
+```
+
+<!-- end of file -->

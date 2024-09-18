@@ -1,0 +1,53 @@
+<!--
+    ---------------------------------------------------------------------- copyright and license ---
+    File: html/search.html.in
+    Copyright 🄯 2014, 2016—2017, 2019—2023 Van de Bugger.
+    This file is part of Tapper.
+    SPDX-License-Identifier: GPL-3.0-or-later
+    ---------------------------------------------------------------------- copyright and license ---
+-->
+
+<div id="search">
+    <form id="search-text" onsubmit="return search_on_submit( '' );">
+        <span id="search-text-prompt">Site search:</span>
+        <input id="search-text-input" type="text" oninput="return search_update_status();">
+    </form>
+    <div id="search-buttons">
+        <form
+            id="search-submit-duck"
+            class="search-submit"
+            action="https://duckduckgo.com"
+            method="get"
+            onsubmit="return search_on_submit( 'duck' );"
+        >
+            <input type="hidden" id="search-duck-text" name="q">
+            <input type="submit" value="DuckDuckGo" class="search-submit-button">
+        </form>
+        <form
+            id="search-submit-google"
+            class="search-submit"
+            action="https://google.com/search"
+            method="get"
+            onsubmit="return search_on_submit( 'google' );"
+        >
+            <input type="hidden" id="search-google-text" name="q">
+            <input type="submit" value="Google" class="search-submit-button">
+        </form>
+        <form
+            id="search-submit-yandex"
+            class="search-submit"
+            action="https://yandex.ru/search"
+            method="get"
+            onsubmit="return search_on_submit( 'yandex' );"
+        >
+            <input type="hidden" id="search-yandex-text" name="text">
+            <input type="submit" value="Yandex" class="search-submit-button">
+        </form>
+    </div>
+</div>
+
+<script>
+search_update_status();
+</script>
+
+<!-- end of file -->
